@@ -109,6 +109,19 @@
   .empty{text-align:center;color:var(--muted);padding:24px}
   .hidden{display:none!important}
   .link{background:none;border:0;color:var(--accent);cursor:pointer;padding:6px 0;font-weight:600}
+  .btn-accent{background:rgba(45,212,191,.12);border:2px solid var(--accent);color:var(--accent)}
+  .btn-accent .sub{display:block;font-size:14px;font-weight:600;opacity:.85}
+  .mastery{font-size:14px;color:var(--muted);text-align:center}
+  .mastery b{color:var(--text)}
+  .conf-row{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap}
+  .conf-row .lbl{color:var(--muted);font-size:14px;margin-right:auto}
+  .conf-btn{min-height:44px;padding:8px 16px;border-radius:999px;border:1px solid var(--border);background:var(--card2);font-size:15px;font-weight:600;cursor:pointer}
+  .conf-btn.on{border-color:var(--accent);color:var(--accent);background:rgba(45,212,191,.12)}
+  .next-due{font-size:14px;color:var(--muted);margin-top:8px}
+  .again-tag{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--red-bg);color:#fca5a5;margin-left:6px}
+  .due-row{display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid var(--border)}
+  .due-row:first-of-type{border-top:0}
+  .reset-link{color:var(--muted);font-size:14px;display:block;margin:4px auto 0}
   @media (min-width:700px){ main{padding-top:28px} h1{font-size:34px} }
 </style>
 </head>
@@ -486,6 +499,9 @@ const QUESTIONS = [
   const K_LAST = "statsPretest.lastScore";
   const K_SESSION = "statsPretest.session";
   const K_PREFS = "statsPretest.prefs";
+  const K_SRS = "statsPretest.srs";
+  const NEW_PER_DAY = 10;
+  const LADDER = [1, 3, 7, 16, 35];
   const BY_ID = {};
   QUESTIONS.forEach(q => { BY_ID[q.id] = q; });
   const app = document.getElementById("app");
@@ -521,6 +537,147 @@ const QUESTIONS = [
   function fmtDate(iso){
     try { return new Date(iso).toLocaleString(undefined, {month:"short", day:"numeric", hour:"numeric", minute:"2-digit"}); }
     catch(e){ return ""; }
+  }
+
+  // ---------- spaced repetition ----------
+  // srs = {id: {interval (days), ease, reps, lapses, due: "YYYY-MM-DD", lastSeen: ISO, firstSeen: "YYYY-MM-DD"}}
+  function nowDate(){ return new Date(Date.now()); }          // Date.now so tests/mocks can shift time
+  function ymd(d){ return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0"); }
+  function todayStr(){ return ymd(nowDate()); }
+  function addDays(str, n){ const [y,m,d] = str.split("-").map(Number); return ymd(new Date(y, m-1, d + n)); }
+  function daysBetween(a, b){ const pa = a.split("-").map(Number), pb = b.split("-").map(Number);
+    return Math.round((Date.UTC(pb[0],pb[1]-1,pb[2]) - Date.UTC(pa[0],pa[1]-1,pa[2])) / 86400000); }
+  function getSrs(){ const v = load(K_SRS, {}); return v && typeof v === "object" && !Array.isArray(v) ? v : {}; }
+  function nextInterval(iv, ease){
+    for (const step of LADDER) if (iv < step) return step;
+    return Math.round(iv * (ease || 2.2));
+  }
+  // Pure: new card state from previous state (or null = new card)
+  function scheduleCard(prev, correct, conf, countLapse){
+    const t = todayStr();
+    const c = prev ? Object.assign({}, prev) : { interval: 0, ease: 2.2, reps: 0, lapses: 0, due: t, firstSeen: t };
+    if (!c.firstSeen) c.firstSeen = t;
+    c.lastSeen = nowDate().toISOString();
+    if (!correct) {
+      c.interval = 0; c.due = t; c.reps = 0;
+      if (countLapse !== false) c.lapses = (c.lapses || 0) + 1;
+      c.ease = Math.max(1.3, Math.round(((c.ease || 2.2) - 0.2) * 100) / 100);
+      return c;
+    }
+    const early = prev && prev.due && prev.due > t && prev.interval > 0;   // not due yet: don't grow interval
+    if (early) { c.reps = (c.reps || 0); return c; }
+    const prevIv = c.interval || 0;
+    if (conf === "guessed") {
+      c.interval = Math.max(1, prevIv);
+      c.ease = Math.max(1.3, Math.round(((c.ease || 2.2) - 0.15) * 100) / 100);
+    } else {
+      c.interval = nextInterval(prevIv, c.ease);
+    }
+    c.reps = (c.reps || 0) + 1;
+    c.due = addDays(t, c.interval);
+    return c;
+  }
+  function srStats(){
+    const srs = getSrs(), t = todayStr();
+    let due = 0, mastered = 0, learning = 0, fresh = 0, introducedToday = 0, nextDue = null;
+    const dueIds = [], newIds = [];
+    QUESTIONS.forEach(q => {
+      const c = srs[q.id];
+      if (!c) { fresh++; newIds.push(q.id); return; }
+      if (c.firstSeen === t) introducedToday++;
+      if ((c.interval || 0) >= 7) mastered++; else learning++;
+      if (!c.due || c.due <= t) { due++; dueIds.push(q.id); }
+      else if (!nextDue || c.due < nextDue) nextDue = c.due;
+    });
+    const newAvail = Math.min(newIds.length, Math.max(0, NEW_PER_DAY - introducedToday));
+    if (newIds.length && !newAvail) { const tm = addDays(t, 1); if (!nextDue || tm < nextDue) nextDue = tm; }
+    dueIds.sort((a, b) => ((srs[a].due || "") < (srs[b].due || "") ? -1 : (srs[a].due || "") > (srs[b].due || "") ? 1 : a - b));
+    return { srs, due, mastered, learning, fresh, newAvail, nextDue, dueIds, newIds };
+  }
+  function fmtDay(str){
+    const t = todayStr(), n = daysBetween(t, str);
+    if (n <= 0) return "Today";
+    if (n === 1) return "Tomorrow";
+    const [y,m,d] = str.split("-").map(Number);
+    return new Date(y, m-1, d).toLocaleDateString(undefined, {weekday:"short", month:"short", day:"numeric"});
+  }
+  function fmtIn(iv){ return iv <= 0 ? "today" : iv === 1 ? "tomorrow" : "in " + iv + " days"; }
+  // answer key: due sessions can repeat a question, so key by slot there; other modes key by question id
+  function keyAt(s, i){ return s.mode === "due" ? "s" + i : s.ids[i]; }
+  function recordAnswer(s, k, id, correct){
+    const srs = getSrs();
+    s.srPrev = s.srPrev || {}; s.conf = s.conf || {};
+    s.srPrev[k] = srs[id] ? Object.assign({}, srs[id]) : null;
+    s.conf[k] = "knew";
+    const repeat = s.mode === "due" && s.ids.slice(0, s.index).includes(id);
+    srs[id] = scheduleCard(s.srPrev[k], correct, "knew", !repeat);
+    save(K_SRS, srs);
+  }
+  function setConfidence(s, k, id, conf){
+    if (!s.srPrev || !Object.prototype.hasOwnProperty.call(s.srPrev, k)) return;
+    const srs = getSrs();
+    s.conf[k] = conf;
+    srs[id] = scheduleCard(s.srPrev[k], true, conf, true);
+    save(K_SRS, srs);
+  }
+  function startDue(){
+    const st = srStats();
+    const prefs = getPrefs();
+    let fresh = st.newIds.slice(0, st.newAvail);
+    if (prefs.shuffleQ) fresh = shuffle(st.newIds).slice(0, st.newAvail);
+    const ids = st.dueIds.concat(fresh);
+    if (!ids.length) { renderHome(); return; }
+    const choiceOrder = {};
+    ids.forEach(id => { const c = BY_ID[id].choices; choiceOrder[id] = prefs.shuffleC ? shuffle(c) : c.slice(); });
+    session = { mode: "due", ids, choiceOrder, index: 0, answers: {}, pending: {}, srPrev: {}, conf: {}, started: new Date().toISOString() };
+    saveSession();
+    renderQuiz();
+  }
+  function finishDue(){
+    const s = session;
+    const seen = []; const first = {};
+    s.ids.forEach((id, i) => {
+      if (!(id in first)) { seen.push(id); first[id] = s.answers["s" + i] === BY_ID[id].answer; }
+    });
+    const correct = seen.filter(id => first[id]).length;
+    const srs = getSrs();
+    const byDay = {};
+    seen.forEach(id => { const d = srs[id] && srs[id].due; if (d) byDay[d] = (byDay[d] || 0) + 1; });
+    lastResult = { mode: "due", reviewed: seen.length, attempts: s.ids.length, correct,
+      percent: seen.length ? Math.round(correct / seen.length * 1000) / 10 : 0,
+      missed: seen.filter(id => !first[id]), byDay };
+    session = null;
+    remove(K_SESSION);
+    renderDueResults();
+  }
+  function renderDueResults(){
+    const r = lastResult;
+    const st = srStats();
+    const days = Object.keys(r.byDay).sort();
+    app.innerHTML = `
+      <div class="stack">
+        <div class="card" style="text-align:center">
+          <div class="muted">Review session complete</div>
+          <div id="reviewedText" style="font-size:44px;font-weight:800;color:var(--accent);line-height:1.2;margin:6px 0">${r.reviewed} card${r.reviewed === 1 ? "" : "s"}</div>
+          <div style="font-size:22px;font-weight:700" id="accText">${r.percent}% first-try accuracy</div>
+          <div class="muted" style="font-size:15px">${r.correct} of ${r.reviewed} right first time · ${r.attempts} answers total</div>
+        </div>
+        <div class="card" id="nextReviews">
+          <h2>Next reviews</h2>
+          ${days.map(d => `<div class="due-row"><span>${esc(fmtDay(d))}</span><span class="muted">${r.byDay[d]} card${r.byDay[d] === 1 ? "" : "s"}</span></div>`).join("")}
+          <div class="muted" style="font-size:14px;margin-top:8px">${st.due + st.newAvail ? `Still available today: ${st.due} due · ${st.newAvail} new` : `All caught up.${st.nextDue ? " Next review: " + esc(fmtDay(st.nextDue)) : ""}`}</div>
+        </div>
+        ${r.missed.length ? `<div class="card" id="missedList"><h2>Missed first time (${r.missed.length})</h2>
+          ${r.missed.map(id => { const q = BY_ID[id]; return `<div class="miss-item"><div class="miss-stem"><span style="color:var(--accent)">#${q.id}</span> ${esc(shortStem(q))}</div><div class="ans-line ans-right">Correct: ${esc(q.answer)}</div></div>`; }).join("")}
+        </div>` : ""}
+        <div class="btn-row">
+          <button class="btn btn-primary" id="homeBtn">Home</button>
+          <button class="btn" id="reviewAll">Review all</button>
+        </div>
+      </div>`;
+    document.getElementById("homeBtn").onclick = () => renderHome();
+    document.getElementById("reviewAll").onclick = () => renderReview();
+    scrollTop();
   }
 
   // ---------- state ----------
@@ -585,6 +742,8 @@ const QUESTIONS = [
     const missed = getMissed();
     const saved = load(K_SESSION, null);
     const canResume = validSession(saved);
+    const st = srStats();
+    const dueTotal = st.due + st.newAvail;
     app.innerHTML = `
       <div class="stack">
         <div>
@@ -597,7 +756,11 @@ const QUESTIONS = [
           <div class="score-chip"><span class="score-big">${last.correct} / ${last.total}</span><span class="muted">${last.percent}%</span></div>
         </div>` : ""}
         ${canResume ? `
-        <button class="btn btn-primary btn-big" id="resumeBtn">Resume quiz · Q${saved.index + 1} of ${saved.ids.length}</button>` : ""}
+        <button class="btn btn-primary btn-big" id="resumeBtn">Resume ${saved.mode === "due" ? "review" : "quiz"} · Q${saved.index + 1} of ${saved.ids.length}</button>` : ""}
+        <button class="btn btn-accent btn-big" id="dueBtn" ${dueTotal ? "" : "disabled"}>${dueTotal
+          ? `Due for review (${st.due})<span class="sub">${st.newAvail} new · overdue first</span>`
+          : `All caught up<span class="sub">Next review: ${st.nextDue ? esc(fmtDay(st.nextDue)) : "—"}</span>`}</button>
+        <div class="mastery" id="masteryLine">Mastered <b>${st.mastered}</b> · Learning <b>${st.learning}</b> · New <b>${st.fresh}</b></div>
         <button class="btn ${canResume ? "" : "btn-primary"} btn-big" id="startBtn">${canResume ? "Start new quiz" : "Start Quiz"}</button>
         <button class="btn" id="missedBtn" ${missed.length ? "" : "disabled"}>Practice missed only${missed.length ? ` (${missed.length})` : ""}</button>
         <button class="btn" id="reviewBtn">Review all Q&amp;A</button>
@@ -605,6 +768,7 @@ const QUESTIONS = [
           <label class="toggle"><span>Shuffle questions</span><input type="checkbox" id="shuffleQ" ${prefs.shuffleQ ? "checked" : ""}><span class="switch"></span></label>
           <label class="toggle"><span>Shuffle answer choices</span><input type="checkbox" id="shuffleC" ${prefs.shuffleC ? "checked" : ""}><span class="switch"></span></label>
         </div>
+        <button class="link reset-link" id="resetBtn">Reset progress</button>
       </div>`;
     const setPref = (k, v) => { const p = getPrefs(); p[k] = v; save(K_PREFS, p); };
     document.getElementById("shuffleQ").onchange = e => setPref("shuffleQ", e.target.checked);
@@ -612,6 +776,12 @@ const QUESTIONS = [
     document.getElementById("startBtn").onclick = () => startQuiz("all");
     document.getElementById("missedBtn").onclick = () => startQuiz("missed");
     document.getElementById("reviewBtn").onclick = () => renderReview();
+    document.getElementById("dueBtn").onclick = () => startDue();
+    document.getElementById("resetBtn").onclick = () => {
+      if (!confirm("Reset all progress? This clears spaced-repetition history, missed questions, and your last score.")) return;
+      remove(K_SRS); remove(K_MISSED); remove(K_LAST);
+      renderHome();
+    };
     if (canResume) document.getElementById("resumeBtn").onclick = () => { session = saved; session.pending = session.pending || {}; renderQuiz(); };
     scrollTop();
   }
@@ -621,8 +791,13 @@ const QUESTIONS = [
     const id = s.ids[s.index];
     const q = BY_ID[id];
     const order = (s.choiceOrder && s.choiceOrder[id]) || q.choices;
-    const checked = Object.prototype.hasOwnProperty.call(s.answers, id);
-    const chosen = checked ? s.answers[id] : (s.pending && s.pending[id]);
+    const k = keyAt(s, s.index);
+    const checked = Object.prototype.hasOwnProperty.call(s.answers, k);
+    const chosen = checked ? s.answers[k] : (s.pending && s.pending[k]);
+    const isRepeat = s.mode === "due" && s.ids.slice(0, s.index).includes(id);
+    const canConf = checked && s.srPrev && Object.prototype.hasOwnProperty.call(s.srPrev, k);
+    const conf = (s.conf && s.conf[k]) || "knew";
+    const curSr = getSrs()[id];
     const total = s.ids.length;
     const isLast = s.index === total - 1;
     const pct = ((s.index + (checked ? 1 : 0)) / total) * 100;
@@ -642,10 +817,10 @@ const QUESTIONS = [
     app.innerHTML = `
       <div>
         <div class="progress-text"><span id="progressText">Question ${s.index + 1} of ${total}</span>
-          <span>${s.mode === "missed" ? "Missed only" : ""}</span></div>
+          <span>${s.mode === "missed" ? "Missed only" : s.mode === "due" ? "Due review" : ""}</span></div>
         <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${s.index + (checked?1:0)}"><div style="width:${pct}%"></div></div>
         <div class="card">
-          <div class="qnum">Pretest #${q.id}</div>
+          <div class="qnum">Pretest #${q.id}${isRepeat ? '<span class="again-tag">again</span>' : ""}</div>
           <p class="prompt">${esc(q.prompt)}</p>
           <fieldset class="choices ${checked ? "locked" : ""}" id="choices">
             <legend class="hidden">Choices</legend>
@@ -656,6 +831,12 @@ const QUESTIONS = [
             <div class="verdict">${isRight ? "Correct!" : "Not quite."}</div>
             ${isRight ? "" : `<div style="margin-bottom:6px">Correct answer: <strong>${esc(q.answer)}</strong></div>`}
             <div class="muted" style="color:#c9d1db">${esc(q.explanation)}</div>
+            ${isRight && canConf ? `
+            <div class="conf-row" id="confRow"><span class="lbl">How sure were you?</span>
+              <button class="conf-btn ${conf === "guessed" ? "on" : ""}" data-conf="guessed" aria-pressed="${conf === "guessed"}">Guessed</button>
+              <button class="conf-btn ${conf === "knew" ? "on" : ""}" data-conf="knew" aria-pressed="${conf === "knew"}">Knew it</button>
+            </div>` : ""}
+            ${canConf && curSr ? `<div class="next-due" id="nextDue">Next review: ${isRight ? esc(fmtIn(daysBetween(todayStr(), curSr.due))) : s.mode === "due" ? "comes back later this session" : "today"}</div>` : ""}
           </div>` : ""}
           <div class="actions">
             ${checked
@@ -673,7 +854,7 @@ const QUESTIONS = [
       app.querySelectorAll('input[name="choice"]').forEach(inp => {
         inp.addEventListener("change", () => {
           s.pending = s.pending || {};
-          s.pending[id] = order[+inp.value];
+          s.pending[k] = order[+inp.value];
           saveSession();
           app.querySelectorAll(".choice").forEach(l => l.classList.toggle("selected", l.querySelector("input").checked));
           document.getElementById("checkBtn").disabled = false;
@@ -682,8 +863,21 @@ const QUESTIONS = [
       document.getElementById("checkBtn").onclick = () => {
         const sel = app.querySelector('input[name="choice"]:checked');
         if (!sel) return;
-        s.answers[id] = order[+sel.value];
-        if (s.pending) delete s.pending[id];
+        const ans = order[+sel.value];
+        s.answers[k] = ans;
+        if (s.pending) delete s.pending[k];
+        recordAnswer(s, k, id, ans === q.answer);
+        if (s.mode === "due" && ans !== q.answer) {
+          // re-queue a few cards later; must be answered correctly before the session ends
+          s.ids.splice(Math.min(s.index + 4, s.ids.length), 0, id);
+          // shift slot-keyed data after the insertion point
+          const at = Math.min(s.index + 4, s.ids.length - 1);
+          ["answers", "pending", "srPrev", "conf"].forEach(f => {
+            const o = s[f]; if (!o) return; const n = {};
+            Object.keys(o).forEach(key => { const i = +key.slice(1); n[i >= at ? "s" + (i + 1) : key] = o[key]; });
+            s[f] = n;
+          });
+        }
         saveSession();
         renderQuiz();
         const fb = document.getElementById("feedback");
@@ -691,10 +885,11 @@ const QUESTIONS = [
       };
     } else {
       document.getElementById("nextBtn").onclick = () => {
-        if (isLast) { finishQuiz(); return; }
+        if (isLast) { if (s.mode === "due") finishDue(); else finishQuiz(); return; }
         s.index++; saveSession(); renderQuiz(); scrollTop();
       };
     }
+    app.querySelectorAll(".conf-btn").forEach(b => b.onclick = () => { setConfidence(s, k, id, b.dataset.conf); saveSession(); renderQuiz(); });
     document.getElementById("quitBtn").onclick = () => { saveSession(); session = null; renderHome(); };
     const prev = document.getElementById("prevBtn");
     if (prev) prev.onclick = () => { s.index--; saveSession(); renderQuiz(); scrollTop(); };
