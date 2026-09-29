@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e1116">
+<meta name="color-scheme" content="dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Stats Trainer">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<title>ODU Stats Midterm Pretest Trainer</title>
+<style>
+  :root{
+    --bg:#0e1116; --card:#171b22; --card2:#1d222b; --border:#2a313c;
+    --text:#e8ecf1; --muted:#9aa4b2; --accent:#2dd4bf; --accent-ink:#04201c;
+    --green:#22c55e; --green-bg:rgba(34,197,94,.14); --red:#ef4444; --red-bg:rgba(239,68,68,.14);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text)}
+  body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:18px;line-height:1.5;-webkit-text-size-adjust:100%;min-height:100vh;display:flex;flex-direction:column}
+  body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+  button,input{font:inherit;color:inherit}
+  .topbar{position:sticky;top:0;z-index:10;background:rgba(14,17,22,.92);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--border);padding:calc(10px + env(safe-area-inset-top)) 16px 10px}
+  .topbar-inner{max-width:760px;margin:0 auto;display:flex;align-items:center;gap:12px}
+  .logo{width:36px;height:36px;border-radius:10px;background:var(--accent);color:var(--accent-ink);
+    display:grid;place-items:center;font-weight:800;font-size:17px;flex:none;cursor:pointer;border:0}
+  .tb-title{font-weight:700;font-size:17px;line-height:1.2}
+  .tb-sub{color:var(--muted);font-size:13px}
+  main{flex:1;width:100%;max-width:760px;margin:0 auto;padding:18px 16px 24px}
+  footer{text-align:center;color:var(--muted);font-size:12px;padding:14px 16px calc(14px + env(safe-area-inset-bottom));opacity:.8}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px}
+  .stack>*+*{margin-top:12px}
+  h1{font-size:28px;line-height:1.2;margin:4px 0 6px}
+  h2{font-size:22px;margin:0 0 8px}
+  .muted{color:var(--muted)}
+  .btn{display:block;width:100%;min-height:54px;padding:14px 18px;border-radius:14px;border:1px solid var(--border);
+    background:var(--card2);font-weight:600;font-size:18px;cursor:pointer;text-align:center;transition:transform .05s,filter .15s}
+  .btn:active{transform:scale(.99)}
+  .btn:hover:not(:disabled){filter:brightness(1.12)}
+  .btn-primary{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+  .btn-big{min-height:64px;font-size:20px}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+  .btn-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;cursor:pointer;min-height:52px}
+  .toggle+.toggle{border-top:1px solid var(--border)}
+  .toggle input{position:absolute;opacity:0;width:1px;height:1px}
+  .switch{width:52px;height:32px;border-radius:999px;background:#39414d;position:relative;flex:none;transition:background .15s}
+  .switch::after{content:"";position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#fff;transition:transform .15s}
+  .toggle input:checked+.switch{background:var(--accent)}
+  .toggle input:checked+.switch::after{transform:translateX(20px)}
+  .toggle input:focus-visible+.switch{outline:2px solid var(--accent);outline-offset:2px}
+  .score-chip{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .score-big{font-size:26px;font-weight:800;color:var(--accent)}
+  .progress-text{display:flex;justify-content:space-between;color:var(--muted);font-size:15px;margin-bottom:8px}
+  .bar{height:8px;background:#262c36;border-radius:999px;overflow:hidden;margin-bottom:16px}
+  .bar>div{height:100%;background:var(--accent);border-radius:999px;transition:width .25s}
+  .prompt{white-space:pre-wrap;font-size:19px;margin:0 0 16px;word-wrap:break-word}
+  .qnum{color:var(--accent);font-weight:700;font-size:14px;letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px}
+  .choices{display:flex;flex-direction:column;gap:10px;margin:0;padding:0;border:0}
+  .choice{display:flex;align-items:center;gap:14px;min-height:58px;padding:14px 16px;border:2px solid var(--border);
+    border-radius:14px;background:var(--card2);cursor:pointer;transition:border-color .12s,background .12s}
+  .choice input{position:absolute;opacity:0;width:1px;height:1px}
+  .radio{width:24px;height:24px;border-radius:50%;border:2px solid #5b6574;flex:none;display:grid;place-items:center}
+  .choice.selected{border-color:var(--accent)}
+  .choice.selected .radio{border-color:var(--accent)}
+  .choice.selected .radio::after{content:"";width:12px;height:12px;border-radius:50%;background:var(--accent)}
+  .choice:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
+  .choice-text{flex:1;white-space:pre-wrap}
+  .locked .choice{cursor:default}
+  .choice.correct{border-color:var(--green);background:var(--green-bg)}
+  .choice.correct .radio{border-color:var(--green);background:var(--green)}
+  .choice.correct .radio::after{content:"✓";color:#04210f;background:none;width:auto;height:auto;font-size:15px;font-weight:900;line-height:1}
+  .choice.wrong{border-color:var(--red);background:var(--red-bg)}
+  .choice.wrong .radio{border-color:var(--red);background:var(--red)}
+  .choice.wrong .radio::after{content:"✕";color:#2a0707;background:none;width:auto;height:auto;font-size:14px;font-weight:900;line-height:1}
+  .locked .choice:not(.correct):not(.wrong){opacity:.6}
+  .feedback{margin-top:16px;padding:14px 16px;border-radius:14px;border:1px solid var(--border);background:#12161c}
+  .feedback .verdict{font-weight:800;margin-bottom:4px}
+  .feedback.ok .verdict{color:var(--green)}
+  .feedback.bad .verdict{color:var(--red)}
+  .actions{margin-top:16px}
+  .miss-item{padding:14px 0;border-top:1px solid var(--border)}
+  .miss-item:first-child{border-top:0;padding-top:4px}
+  .miss-stem{font-weight:600}
+  .ans-line{font-size:16px;margin-top:4px}
+  .ans-you{color:#fca5a5}.ans-right{color:#86efac}
+  .search{width:100%;min-height:52px;padding:12px 16px;border-radius:14px;border:1px solid var(--border);background:var(--card);font-size:18px;outline:none}
+  .search:focus{border-color:var(--accent)}
+  details.rq{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+  details.rq+details.rq{margin-top:10px}
+  details.rq summary{list-style:none;cursor:pointer;padding:14px 16px;display:flex;gap:10px;align-items:flex-start}
+  details.rq summary::-webkit-details-marker{display:none}
+  details.rq summary::after{content:"▾";margin-left:auto;color:var(--muted);transition:transform .15s;flex:none}
+  details.rq[open] summary::after{transform:rotate(180deg)}
+  .rq-id{color:var(--accent);font-weight:800;flex:none;min-width:30px}
+  .rq-stem{flex:1;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  details.rq[open] .rq-stem{display:none}
+  .rq-body{padding:0 16px 16px}
+  .rq-body ul{margin:8px 0 12px;padding-left:20px}
+  .rq-body li{margin:4px 0}
+  .rq-body li.is-answer{color:#86efac;font-weight:700}
+  .tag{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--red-bg);color:#fca5a5;margin-left:6px;vertical-align:middle}
+  .empty{text-align:center;color:var(--muted);padding:24px}
+  .hidden{display:none!important}
+  .link{background:none;border:0;color:var(--accent);cursor:pointer;padding:6px 0;font-weight:600}
+  @media (min-width:700px){ main{padding-top:28px} h1{font-size:34px} }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <button class="logo" id="logoBtn" aria-label="Home">Σ</button>
+    <div>
+      <div class="tb-title">Stats Pretest Trainer</div>
+      <div class="tb-sub">44 questions · intro stats</div>
+    </div>
+  </div>
+</header>
+
+<main id="app" aria-live="polite"></main>
+
+<footer>Study aid only. Verify against your own exam.</footer>
+
+<script>
+const QUESTIONS = [
+  {
+    id: 1,
+    prompt: "The following is a partial relative frequency distribution of grades in an introductory statistics course.\n\nGrade | Relative Frequency\nA | 0.22\nB | ?\nC | 0.18\nD | 0.17\nE | 0.06\n\nFind the relative frequency for the B grade.",
+    choices: [".47", ".37", ".27"],
+    answer: ".37",
+    explanation: "Relative frequencies of all categories must sum to 1. 0.22 + 0.18 + 0.17 + 0.06 = 0.63, so B = 1 − 0.63 = 0.37."
+  },
+  {
+    id: 2,
+    prompt: "Probabilities must be assigned to sample space outcomes so that the probability assigned to each sample space outcome must be between ______ inclusive.",
+    choices: ["−1 and 1", "0 and 100", "0 and 1", "−100 and 100"],
+    answer: "0 and 1",
+    explanation: "Kolmogorov axiom: any probability satisfies 0 ≤ P ≤ 1. Negative values are impossible; 0–100 would be a percent scale, not a probability."
+  },
+  {
+    id: 3,
+    prompt: "All of the following are used to describe quantitative data except the ________.",
+    choices: ["stem-and-leaf chart", "histogram", "dot plot", "pie chart"],
+    answer: "pie chart",
+    explanation: "Stem-and-leaf, histogram, and dot plot display numeric data. A pie chart is for categorical (qualitative) proportions."
+  },
+  {
+    id: 4,
+    prompt: "Which of the following divides quantitative measurements into classes and graphs the frequency, relative frequency, or percentage frequency for each class?",
+    choices: ["scatter plot", "histogram", "dot plot", "stem-and-leaf display"],
+    answer: "histogram",
+    explanation: "A histogram bins quantitative values into classes and draws a bar for each class frequency. Scatter plots show paired variables; dot plots and stem-and-leaf keep individual values."
+  },
+  {
+    id: 5,
+    prompt: "In a dataset about employees, which of the following would be considered a variable?",
+    choices: [
+      "the company's total number of employees",
+      "each employee's annual salary",
+      "the average salary across all departments",
+      "the specific employee \"John Smith\""
+    ],
+    answer: "each employee's annual salary",
+    explanation: "A variable is a characteristic that takes different values across units. Salary varies by employee. Head-count and the overall average are single summaries; John Smith is one observational unit."
+  },
+  {
+    id: 6,
+    prompt: "Which percentile describes the first quartile, Q1?",
+    choices: ["25th", "100th", "50th", "75th"],
+    answer: "25th",
+    explanation: "Q1 is the 25th percentile, Q2/median is the 50th, Q3 is the 75th, and the 100th is the maximum."
+  },
+  {
+    id: 7,
+    prompt: "A ________ is a measure of the chance that an uncertain event will occur.",
+    choices: ["probability", "complement", "population", "sample space", "random experiment"],
+    answer: "probability",
+    explanation: "Probability is the numerical measure of likelihood. The other terms are related objects (event opposite, collection of units, set of outcomes, or the process), not the measure itself."
+  },
+  {
+    id: 8,
+    prompt: "A Pareto chart is specifically designed to",
+    choices: [
+      "show the cumulative frequency of categories in a qualitative dataset.",
+      "display the distribution of a single quantitative variable.",
+      "highlight the most frequent categories contributing to a problem or outcome.",
+      "compare proportions of different categories in a pie-like format."
+    ],
+    answer: "highlight the most frequent categories contributing to a problem or outcome.",
+    explanation: "A Pareto chart orders categorical bars from most to least frequent (often with a cumulative line) so the vital-few categories that drive a problem stand out. Histograms show quantitative distributions; pie charts show category proportions."
+  },
+  {
+    id: 9,
+    prompt: "A(n) ________ is the probability that one event will occur given that we know that another event already has occurred.",
+    choices: [
+      "subjective probability",
+      "long-run relative frequency",
+      "complement of events",
+      "sample space outcome",
+      "conditional probability"
+    ],
+    answer: "conditional probability",
+    explanation: "Conditional probability is P(A|B) = P(A ∩ B) / P(B): the chance of A given that B has occurred."
+  },
+  {
+    id: 10,
+    prompt: "Which of the following is influenced the least by the occurrence of extreme values in a sample?",
+    choices: ["geometric mean", "mean", "median", "weighted mean"],
+    answer: "median",
+    explanation: "The median depends only on the middle position of ordered data, so extremes do not move it. Means (arithmetic, weighted, geometric) use every value and are pulled by outliers."
+  },
+  {
+    id: 11,
+    prompt: "A graphical portrayal of a quantitative data set that divides the data into classes and gives the frequency of each class is a(n) ________",
+    choices: ["dot plot", "bar chart", "Pareto chart", "histogram", "ogive plot"],
+    answer: "histogram",
+    explanation: "That is the definition of a histogram. Bar/Pareto charts are for categories; a dot plot plots individual points; an ogive graphs cumulative frequencies."
+  },
+  {
+    id: 12,
+    prompt: "The simultaneous occurrence of events A and B is represented by the notation ________.",
+    choices: ["A ∩ B", "B|A", "A|B", "A ∪ B"],
+    answer: "A ∩ B",
+    explanation: "Both events happening at once is the intersection A ∩ B. A ∪ B is either-or-both. A|B and B|A are conditionals."
+  },
+  {
+    id: 13,
+    prompt: "Events that have no sample space outcomes in common, and therefore cannot occur simultaneously, are ________",
+    choices: ["unions", "mutually exclusive", "intersections", "independent"],
+    answer: "mutually exclusive",
+    explanation: "Mutually exclusive (disjoint) events have empty intersection, so they cannot occur together. Independence is a probability factorization and still allows overlap."
+  },
+  {
+    id: 14,
+    prompt: "If two events are independent, we can ________ their probabilities to determine the intersection probability.",
+    choices: ["divide", "subtract", "add", "multiply"],
+    answer: "multiply",
+    explanation: "Independence means P(A ∩ B) = P(A) × P(B). Addition is for unions (especially disjoint unions)."
+  },
+  {
+    id: 15,
+    prompt: "A survey of customer satisfaction with a product yields responses of \"Very Satisfied,\" \"Satisfied,\" \"Neutral,\" \"Dissatisfied,\" and \"Very Dissatisfied.\" Which graphical display is MOST appropriate to summarize this data?",
+    choices: ["line graph", "pie chart", "histogram", "scatter plot"],
+    answer: "pie chart",
+    explanation: "The variable is categorical (ordinal Likert). Among the listed graphs, only a pie chart is meant for category proportions. Histogram/scatter/line graphs need quantitative data."
+  },
+  {
+    id: 16,
+    prompt: "Which of the following is an example of a qualitative variable?",
+    choices: [
+      "the number of pages in a book",
+      "the temperature in degrees Celsius",
+      "the brand of a car",
+      "the weight of a package in grams"
+    ],
+    answer: "the brand of a car",
+    explanation: "Brand is a category label. Pages, temperature, and weight are quantitative."
+  },
+  {
+    id: 17,
+    prompt: "In a hearing test, subjects estimate the loudness (in decibels) of a sound, and the results are: 68, 67, 70, 71, 68, 75, 68, 62, 80, 73, 68. What is the median?",
+    choices: ["68", "71", "70", "80", "75"],
+    answer: "68",
+    explanation: "n = 11 (odd). Ordered: 62, 67, 68, 68, 68, 68, 70, 71, 73, 75, 80. The 6th value is 68."
+  },
+  {
+    id: 18,
+    prompt: "Probabilities must be assigned to each sample space outcome so that the probabilities of all the sample space outcomes add up to ________.",
+    choices: ["1", "0", "between 0 and 1", "between −1 and 1"],
+    answer: "1",
+    explanation: "The probabilities of all mutually exclusive sample-space outcomes sum to 1. Individual probabilities lie in [0, 1], but the total is exactly 1."
+  },
+  {
+    id: 19,
+    prompt: "If a population distribution is skewed to the right, then, given a random sample from that population, one would expect that the ________",
+    choices: [
+      "mode would be equal to the mean",
+      "median would be greater than the mean",
+      "median would be less than the mean",
+      "median would be equal to the mean"
+    ],
+    answer: "median would be less than the mean",
+    explanation: "Right-skew (long right tail) pulls the mean to the right of the median, so median < mean."
+  },
+  {
+    id: 20,
+    prompt: "Any characteristic of an element is called a ________.",
+    choices: ["variable", "census", "process", "set"],
+    answer: "variable",
+    explanation: "In statistics, a characteristic measured or classified on an element (unit) is a variable."
+  },
+  {
+    id: 21,
+    prompt: "A company collected the ages from a random sample of its middle managers, with the resulting frequency distribution:\n\nClass Interval | Frequency\n20 to <25 | 8\n25 to <30 | 6\n30 to <35 | 5\n35 to <40 | 12\n40 to <45 | 15\n45 to <50 | 7\n\nWhat would be the approximate shape of the relative frequency histogram?",
+    choices: ["uniform", "linear", "skewed to the left", "skewed to the right", "bell-shaped / symmetric"],
+    answer: "skewed to the left",
+    explanation: "Frequencies: 8, 6, 5, 12, 15, 7. The peak is in 40–<45 (toward the right of the range) with a longer, lower tail on the left, which is left-skewed (negative skew). Not uniform and not linear."
+  },
+  {
+    id: 22,
+    prompt: "In a statistics class, the following 10 scores were randomly selected: 74, 73, 77, 77, 71, 68, 65, 77, 67, 66. What is the mode?",
+    choices: ["72.0", "77.0", "71.0", "73.0", "71.5"],
+    answer: "77.0",
+    explanation: "77 appears three times; every other score appears once. The mode is 77.0."
+  },
+  {
+    id: 23,
+    prompt: "The ________ of two events A and B is the event that consists of the sample space outcomes belonging to both event A and event B.",
+    choices: ["mutual exclusivity", "intersection", "union", "complement"],
+    answer: "intersection",
+    explanation: "Outcomes in both A and B form the intersection A ∩ B."
+  },
+  {
+    id: 24,
+    prompt: "When developing a frequency distribution, the class (group) intervals must be ________",
+    choices: ["integer", "small", "large", "nonoverlapping", "equal"],
+    answer: "nonoverlapping",
+    explanation: "Classes must be mutually exclusive so each observation falls in exactly one class. Equal width is preferred but not required; integer endpoints and size are not mandatory."
+  },
+  {
+    id: 25,
+    prompt: "The ________ of two events X and Y is another event that consists of the sample space outcomes belonging to either event X or event Y or both events X and Y.",
+    choices: ["complement", "intersection", "union", "conditional probability"],
+    answer: "union",
+    explanation: "That is the union X ∪ Y."
+  },
+  {
+    id: 26,
+    prompt: "Which of the following graphs is best suited for displaying the distribution of continuous quantitative data, such as income or age?",
+    choices: ["Pareto chart", "histogram", "bar chart", "pie chart"],
+    answer: "histogram",
+    explanation: "Continuous quantitative variables are grouped into intervals and shown with a histogram. Pareto/bar/pie charts are for categorical data."
+  },
+  {
+    id: 27,
+    prompt: "The average of the squared deviations of the individual population measurement from the population mean is the ________",
+    choices: ["range", "mean", "median", "variance", "standard deviation"],
+    answer: "variance",
+    explanation: "Population variance σ² = Σ(xᵢ − μ)² / N. Standard deviation is the square root of that quantity."
+  },
+  {
+    id: 28,
+    prompt: "A relative frequency histogram having a longer tail to the right than to the left is said to be ________",
+    choices: ["normal", "skewed to the left", "a scatter plot", "skewed to the right"],
+    answer: "skewed to the right",
+    explanation: "A longer right tail is right-skew (positive skew)."
+  },
+  {
+    id: 29,
+    prompt: "Consider the following data on distances traveled by people to visit the local amusement park and calculate the relative frequency for the shortest distance.\n\nDistance | Frequency\n1–8 miles | 15\n9–16 miles | 12\n17–24 miles | 7\n25–32 miles | 5\n33–40 miles | 1",
+    choices: [".150", ".375", ".300"],
+    answer: ".375",
+    explanation: "Shortest class is 1–8 miles (freq 15). Total n = 15+12+7+5+1 = 40. Relative frequency = 15/40 = 0.375."
+  },
+  {
+    id: 30,
+    prompt: "A measurement located outside the upper limits of a box-and-whiskers display is ________",
+    choices: [
+      "always the largest value in the data set",
+      "within the lower limits",
+      "an outlier",
+      "always in the first quartile"
+    ],
+    answer: "an outlier",
+    explanation: "Points beyond the fences (typically Q3 + 1.5×IQR) are plotted as outliers. They are not automatically the max, not inside the lower fence, and not in Q1."
+  },
+  {
+    id: 31,
+    prompt: "A ________ displays the frequency of each class with qualitative data and a ________ displays the frequency of each class with quantitative data.",
+    choices: [
+      "histogram, stem-and-leaf display",
+      "bar chart, histogram",
+      "scatter plot, bar chart",
+      "stem-and-leaf, pie chart"
+    ],
+    answer: "bar chart, histogram",
+    explanation: "Bar chart → categorical frequencies. Histogram → quantitative class frequencies."
+  },
+  {
+    id: 32,
+    prompt: "________ is the science of using a sample to make generalizations about the important aspects of a population.",
+    choices: ["Random sample", "Statistical inference", "Descriptive statistics", "Time series analysis"],
+    answer: "Statistical inference",
+    explanation: "Inferential statistics uses sample data to conclude about a population. Descriptive stats only summarize the sample."
+  },
+  {
+    id: 33,
+    prompt: "In a statistics class, 10 scores were randomly selected with the following results: 74, 73, 77, 77, 71, 68, 65, 77, 67, 66. What are the lower and upper limits of a box-and-whiskers display of this data?",
+    choices: ["67, 77", "57, 87", "47, 97", "37, 107", "52, 92"],
+    answer: "52, 92",
+    explanation: "Ordered: 65, 66, 67, 68, 71, 73, 74, 77, 77, 77. Q1 = 67, Q3 = 77, IQR = 10. Fences: 67 − 1.5×10 = 52 and 77 + 1.5×10 = 92. Those fences are the lower/upper limits used to flag outliers. (All data lie inside, so whiskers run min 65 to max 77, but the listed matching choice is the fences.)"
+  },
+  {
+    id: 34,
+    prompt: "P(A ∪ B) = P(A) + P(B) − P(A ∩ B) represents the formula for the ________.",
+    choices: [
+      "addition rule for two mutually exclusive events",
+      "conditional probability",
+      "addition rule",
+      "multiplication rule"
+    ],
+    answer: "addition rule",
+    explanation: "This is the general addition rule for any two events. If they were mutually exclusive the intersection term would be 0."
+  },
+  {
+    id: 35,
+    prompt: "The number of ways to arrange x successes among n trials is equal to",
+    choices: ["n / x", "n! / (n − x)!", "n! / [x! (n − x)!]", "n! / x!"],
+    answer: "n! / [x! (n − x)!]",
+    explanation: "That is the combination C(n, x) = n! / (x!(n−x)!), the number of ways to choose the success positions."
+  },
+  {
+    id: 36,
+    prompt: "Statistical ________ refers to using a sample of measurements and making generalizations about the important aspects of a population.",
+    choices: ["sampling", "analysis", "inference", "process"],
+    answer: "inference",
+    explanation: "Statistical inference is using a sample to generalize to a population."
+  },
+  {
+    id: 37,
+    prompt: "A company collected the ages from a random sample of its middle managers:\n\nClass Interval | Frequency\n20 to <25 | 8\n25 to <30 | 6\n30 to <35 | 5\n35 to <40 | 12\n40 to <45 | 15\n45 to <50 | 7\n\nWhat is the relative frequency for the class with the greatest frequency?",
+    choices: [".283", ".288", ".132", ".226"],
+    answer: ".283",
+    explanation: "Largest frequency is 15 (40 to <45). Total n = 8+6+5+12+15+7 = 53. 15/53 ≈ 0.283. .288 is the 15/52 distractor; .132 is 7/53."
+  },
+  {
+    id: 38,
+    prompt: "A quantity that measures the variation of a population or a sample relative to its mean is called the ________",
+    choices: ["variance", "standard deviation", "coefficient of variation", "interquartile range", "range"],
+    answer: "coefficient of variation",
+    explanation: "CV = (standard deviation) / mean, so it measures spread relative to the mean. Variance and SD are absolute spread."
+  },
+  {
+    id: 39,
+    prompt: "The set of all possible outcomes for an experiment is called a(n) ________.",
+    choices: ["event", "probability", "experiment", "sample space"],
+    answer: "sample space",
+    explanation: "The sample space is the set of all possible outcomes. An event is a subset of that set."
+  },
+  {
+    id: 40,
+    prompt: "In a statistics class, 10 scores were randomly selected with the following results: 74, 73, 77, 77, 71, 68, 65, 77, 67, 66. What is the 65th percentile?",
+    choices: ["74.0", "77.0", "66.75", "67.3", "65.5"],
+    answer: "74.0",
+    explanation: "Ordered: 65, 66, 67, 68, 71, 73, 74, 77, 77, 77. Location (0.65)(10) = 6.5; common intro-stats rule rounds a non-integer location up, so use the 7th value = 74. Interpolation methods also land near 74."
+  },
+  {
+    id: 41,
+    prompt: "A ________ is a subset of the units in a population.",
+    choices: ["census", "sample", "process", "variable"],
+    answer: "sample",
+    explanation: "A sample is a subset of population units. A census includes every unit."
+  },
+  {
+    id: 42,
+    prompt: "Container 1 has 8 items, 3 of which are defective. Container 2 has 5 items, 2 of which are defective. If one item is drawn from each container, what is the probability that the item from Container 1 is defective and the item from Container 2 is not defective?",
+    choices: ["0.2250", "0.6154", "0.1500", "0.3846", "0.3750"],
+    answer: "0.2250",
+    explanation: "Independent draws: P(D1 and G2) = (3/8)×(3/5) = 9/40 = 0.2250."
+  },
+  {
+    id: 43,
+    prompt: "Which percentile describes the third quartile, Q3?",
+    choices: ["100th", "25th", "75th", "50th"],
+    answer: "75th",
+    explanation: "Q3 is the 75th percentile. Q1 = 25th, median = 50th, max = 100th."
+  },
+  {
+    id: 44,
+    prompt: "In a statistics class, the following 10 scores were randomly selected: 74, 73, 77, 77, 71, 68, 65, 77, 67, 66. What is the mean?",
+    choices: ["71.5", "72.0", "73.0", "77.0", "71.0"],
+    answer: "71.5",
+    explanation: "Sum = 74+73+77+77+71+68+65+77+67+66 = 715. Mean = 715/10 = 71.5."
+  }
+];
+
+(function(){
+  "use strict";
+  const K_MISSED = "statsPretest.missed";
+  const K_LAST = "statsPretest.lastScore";
+  const K_SESSION = "statsPretest.session";
+  const K_PREFS = "statsPretest.prefs";
+  const BY_ID = {};
+  QUESTIONS.forEach(q => { BY_ID[q.id] = q; });
+  const app = document.getElementById("app");
+
+  // ---------- storage helpers ----------
+  function load(key, fallback){
+    try { const v = localStorage.getItem(key); return v == null ? fallback : JSON.parse(v); }
+    catch(e){ return fallback; }
+  }
+  function save(key, val){ try { localStorage.setItem(key, JSON.stringify(val)); } catch(e){} }
+  function remove(key){ try { localStorage.removeItem(key); } catch(e){} }
+  function getMissed(){
+    const m = load(K_MISSED, []);
+    return Array.isArray(m) ? m.filter(id => BY_ID[id]).sort((a,b)=>a-b) : [];
+  }
+  function getPrefs(){ return Object.assign({shuffleQ:false, shuffleC:false}, load(K_PREFS, {})); }
+
+  function esc(s){
+    return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  }
+  function shuffle(arr){
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]] = [a[j],a[i]]; }
+    return a;
+  }
+  function shortStem(q, n){
+    n = n || 110;
+    // For table-style prompts, use the first line / last question sentence
+    let s = q.prompt.split("\n")[0].trim();
+    if (s.length > n) s = s.slice(0, n - 1).trimEnd() + "…";
+    return s;
+  }
+  function fmtDate(iso){
+    try { return new Date(iso).toLocaleString(undefined, {month:"short", day:"numeric", hour:"numeric", minute:"2-digit"}); }
+    catch(e){ return ""; }
+  }
+
+  // ---------- state ----------
+  let session = null;   // {mode, ids, choiceOrder:{id:[...]}, index, answers:{id:choice}, pending:{id:choice}}
+  let lastResult = null;
+  let reviewQuery = "";
+
+  function saveSession(){ if (session) save(K_SESSION, session); }
+
+  function validSession(s){
+    return s && Array.isArray(s.ids) && s.ids.length > 0 && s.ids.every(id => BY_ID[id]) &&
+      typeof s.index === "number" && s.index >= 0 && s.index < s.ids.length && s.answers && typeof s.answers === "object";
+  }
+
+  function startQuiz(mode){
+    const prefs = getPrefs();
+    let ids = mode === "missed" ? getMissed() : QUESTIONS.map(q => q.id);
+    if (!ids.length) { renderHome(); return; }
+    if (prefs.shuffleQ) ids = shuffle(ids);
+    const choiceOrder = {};
+    ids.forEach(id => { const c = BY_ID[id].choices; choiceOrder[id] = prefs.shuffleC ? shuffle(c) : c.slice(); });
+    session = { mode, ids, choiceOrder, index: 0, answers: {}, pending: {}, started: new Date().toISOString() };
+    saveSession();
+    renderQuiz();
+  }
+
+  function finishQuiz(){
+    const s = session;
+    const total = s.ids.length;
+    let correct = 0; const missed = [];
+    s.ids.forEach(id => {
+      if (s.answers[id] === BY_ID[id].answer) correct++;
+      else missed.push({ id, yours: s.answers[id] });
+    });
+    const percent = Math.round((correct / total) * 1000) / 10;
+    save(K_LAST, { correct, total, percent, date: new Date().toISOString() });
+
+    // Update missed ids
+    let stored;
+    if (s.mode === "missed") {
+      // Remove questions now answered correctly; keep everything else previously missed
+      const nowCorrect = new Set(s.ids.filter(id => s.answers[id] === BY_ID[id].answer));
+      stored = getMissed().filter(id => !nowCorrect.has(id));
+      missed.forEach(m => { if (!stored.includes(m.id)) stored.push(m.id); });
+    } else {
+      stored = missed.map(m => m.id);
+    }
+    save(K_MISSED, stored.sort((a,b)=>a-b));
+
+    lastResult = { correct, total, percent, missed, mode: s.mode };
+    session = null;
+    remove(K_SESSION);
+    renderResults();
+  }
+
+  // ---------- views ----------
+  function scrollTop(){ window.scrollTo(0, 0); }
+
+  function renderHome(){
+    const prefs = getPrefs();
+    const last = load(K_LAST, null);
+    const missed = getMissed();
+    const saved = load(K_SESSION, null);
+    const canResume = validSession(saved);
+    app.innerHTML = `
+      <div class="stack">
+        <div>
+          <h1>ODU Stats Midterm Pretest Trainer</h1>
+          <div class="muted">44-question intro stats pretest drill</div>
+        </div>
+        ${last && typeof last.correct === "number" ? `
+        <div class="card" id="lastScore">
+          <div class="muted" style="font-size:14px">Last score${last.date ? " · " + esc(fmtDate(last.date)) : ""}</div>
+          <div class="score-chip"><span class="score-big">${last.correct} / ${last.total}</span><span class="muted">${last.percent}%</span></div>
+        </div>` : ""}
+        ${canResume ? `
+        <button class="btn btn-primary btn-big" id="resumeBtn">Resume quiz · Q${saved.index + 1} of ${saved.ids.length}</button>` : ""}
+        <button class="btn ${canResume ? "" : "btn-primary"} btn-big" id="startBtn">${canResume ? "Start new quiz" : "Start Quiz"}</button>
+        <button class="btn" id="missedBtn" ${missed.length ? "" : "disabled"}>Practice missed only${missed.length ? ` (${missed.length})` : ""}</button>
+        <button class="btn" id="reviewBtn">Review all Q&amp;A</button>
+        <div class="card" style="padding:4px 18px">
+          <label class="toggle"><span>Shuffle questions</span><input type="checkbox" id="shuffleQ" ${prefs.shuffleQ ? "checked" : ""}><span class="switch"></span></label>
+          <label class="toggle"><span>Shuffle answer choices</span><input type="checkbox" id="shuffleC" ${prefs.shuffleC ? "checked" : ""}><span class="switch"></span></label>
+        </div>
+      </div>`;
+    const setPref = (k, v) => { const p = getPrefs(); p[k] = v; save(K_PREFS, p); };
+    document.getElementById("shuffleQ").onchange = e => setPref("shuffleQ", e.target.checked);
+    document.getElementById("shuffleC").onchange = e => setPref("shuffleC", e.target.checked);
+    document.getElementById("startBtn").onclick = () => startQuiz("all");
+    document.getElementById("missedBtn").onclick = () => startQuiz("missed");
+    document.getElementById("reviewBtn").onclick = () => renderReview();
+    if (canResume) document.getElementById("resumeBtn").onclick = () => { session = saved; session.pending = session.pending || {}; renderQuiz(); };
+    scrollTop();
+  }
+
+  function renderQuiz(){
+    const s = session;
+    const id = s.ids[s.index];
+    const q = BY_ID[id];
+    const order = (s.choiceOrder && s.choiceOrder[id]) || q.choices;
+    const checked = Object.prototype.hasOwnProperty.call(s.answers, id);
+    const chosen = checked ? s.answers[id] : (s.pending && s.pending[id]);
+    const total = s.ids.length;
+    const isLast = s.index === total - 1;
+    const pct = ((s.index + (checked ? 1 : 0)) / total) * 100;
+    const isRight = checked && chosen === q.answer;
+
+    const choicesHtml = order.map((c, i) => {
+      let cls = "choice";
+      if (checked) {
+        if (c === q.answer) cls += " correct";
+        else if (c === chosen) cls += " wrong";
+      } else if (c === chosen) cls += " selected";
+      return `<label class="${cls}" data-i="${i}">
+          <input type="radio" name="choice" value="${i}" ${c === chosen ? "checked" : ""} ${checked ? "disabled" : ""}>
+          <span class="radio"></span><span class="choice-text">${esc(c)}</span></label>`;
+    }).join("");
+
+    app.innerHTML = `
+      <div>
+        <div class="progress-text"><span id="progressText">Question ${s.index + 1} of ${total}</span>
+          <span>${s.mode === "missed" ? "Missed only" : ""}</span></div>
+        <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${s.index + (checked?1:0)}"><div style="width:${pct}%"></div></div>
+        <div class="card">
+          <div class="qnum">Pretest #${q.id}</div>
+          <p class="prompt">${esc(q.prompt)}</p>
+          <fieldset class="choices ${checked ? "locked" : ""}" id="choices">
+            <legend class="hidden">Choices</legend>
+            ${choicesHtml}
+          </fieldset>
+          ${checked ? `
+          <div class="feedback ${isRight ? "ok" : "bad"}" id="feedback">
+            <div class="verdict">${isRight ? "Correct!" : "Not quite."}</div>
+            ${isRight ? "" : `<div style="margin-bottom:6px">Correct answer: <strong>${esc(q.answer)}</strong></div>`}
+            <div class="muted" style="color:#c9d1db">${esc(q.explanation)}</div>
+          </div>` : ""}
+          <div class="actions">
+            ${checked
+              ? `<button class="btn btn-primary btn-big" id="nextBtn">${isLast ? "Finish" : "Next →"}</button>`
+              : `<button class="btn btn-primary btn-big" id="checkBtn" ${chosen != null ? "" : "disabled"}>Check answer</button>`}
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:10px">
+          <button class="link" id="quitBtn">← Home (progress saved)</button>
+          ${s.index > 0 ? `<button class="link" id="prevBtn">Previous</button>` : ""}
+        </div>
+      </div>`;
+
+    if (!checked) {
+      app.querySelectorAll('input[name="choice"]').forEach(inp => {
+        inp.addEventListener("change", () => {
+          s.pending = s.pending || {};
+          s.pending[id] = order[+inp.value];
+          saveSession();
+          app.querySelectorAll(".choice").forEach(l => l.classList.toggle("selected", l.querySelector("input").checked));
+          document.getElementById("checkBtn").disabled = false;
+        });
+      });
+      document.getElementById("checkBtn").onclick = () => {
+        const sel = app.querySelector('input[name="choice"]:checked');
+        if (!sel) return;
+        s.answers[id] = order[+sel.value];
+        if (s.pending) delete s.pending[id];
+        saveSession();
+        renderQuiz();
+        const fb = document.getElementById("feedback");
+        if (fb && fb.scrollIntoView) fb.scrollIntoView({block:"nearest", behavior:"smooth"});
+      };
+    } else {
+      document.getElementById("nextBtn").onclick = () => {
+        if (isLast) { finishQuiz(); return; }
+        s.index++; saveSession(); renderQuiz(); scrollTop();
+      };
+    }
+    document.getElementById("quitBtn").onclick = () => { saveSession(); session = null; renderHome(); };
+    const prev = document.getElementById("prevBtn");
+    if (prev) prev.onclick = () => { s.index--; saveSession(); renderQuiz(); scrollTop(); };
+  }
+
+  function renderResults(){
+    const r = lastResult;
+    const missedNow = getMissed();
+    const list = r.missed.map(m => {
+      const q = BY_ID[m.id];
+      return `<div class="miss-item">
+        <div class="miss-stem"><span style="color:var(--accent)">#${q.id}</span> ${esc(shortStem(q))}</div>
+        <div class="ans-line ans-you">Your answer: ${m.yours == null ? "<em>(none)</em>" : esc(m.yours)}</div>
+        <div class="ans-line ans-right">Correct: ${esc(q.answer)}</div>
+      </div>`;
+    }).join("");
+    app.innerHTML = `
+      <div class="stack">
+        <div class="card" style="text-align:center">
+          <div class="muted">${r.mode === "missed" ? "Missed-only practice" : "Quiz"} complete</div>
+          <div id="scoreText" style="font-size:44px;font-weight:800;color:var(--accent);line-height:1.2;margin:6px 0">${r.correct} / ${r.total}</div>
+          <div style="font-size:22px;font-weight:700" id="pctText">${r.percent}%</div>
+        </div>
+        <div class="card" id="missedList">
+          <h2>Missed questions (${r.missed.length})</h2>
+          ${r.missed.length ? list : `<div class="empty">Perfect run — nothing missed. 🎉</div>`}
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="retryAll">Retry all</button>
+          <button class="btn" id="retryMissed" ${missedNow.length ? "" : "disabled"}>Retry missed only${missedNow.length ? ` (${missedNow.length})` : ""}</button>
+          <button class="btn" id="reviewAll">Review all</button>
+          <button class="btn" id="homeBtn">Home</button>
+        </div>
+      </div>`;
+    document.getElementById("retryAll").onclick = () => startQuiz("all");
+    document.getElementById("retryMissed").onclick = () => startQuiz("missed");
+    document.getElementById("reviewAll").onclick = () => renderReview();
+    document.getElementById("homeBtn").onclick = () => renderHome();
+    scrollTop();
+  }
+
+  function renderReview(){
+    const missedSet = new Set(getMissed());
+    const cards = QUESTIONS.map(q => `
+      <details class="rq" data-id="${q.id}" data-text="${esc(q.prompt.toLowerCase())}">
+        <summary><span class="rq-id">${q.id}.</span><span class="rq-stem">${esc(q.prompt)}</span></summary>
+        <div class="rq-body">
+          <p class="prompt" style="font-size:17px;margin:0 0 8px">${esc(q.prompt)}${missedSet.has(q.id) ? '<span class="tag">missed</span>' : ""}</p>
+          <ul>${q.choices.map(c => `<li class="${c === q.answer ? "is-answer" : ""}">${esc(c)}${c === q.answer ? " ✓" : ""}</li>`).join("")}</ul>
+          <div><strong style="color:#86efac">Answer:</strong> ${esc(q.answer)}</div>
+          <div class="muted" style="margin-top:6px;color:#c9d1db">${esc(q.explanation)}</div>
+        </div>
+      </details>`).join("");
+    app.innerHTML = `
+      <div class="stack">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+          <h2 style="margin:0">Review all Q&amp;A</h2>
+          <button class="link" id="homeBtn">← Home</button>
+        </div>
+        <input class="search" id="search" type="search" placeholder="Search question text…" autocomplete="off" value="${esc(reviewQuery)}" aria-label="Search questions">
+        <div class="muted" style="font-size:14px" id="countText"></div>
+        <div style="display:flex;gap:16px"><button class="link" id="expandAll">Expand all</button><button class="link" id="collapseAll">Collapse all</button></div>
+        <div id="reviewList">${cards}</div>
+        <div class="empty hidden" id="noResults">No questions match your search.</div>
+      </div>`;
+    const input = document.getElementById("search");
+    const apply = () => {
+      reviewQuery = input.value;
+      const term = reviewQuery.trim().toLowerCase();
+      let shown = 0;
+      app.querySelectorAll("details.rq").forEach(d => {
+        const q = BY_ID[+d.dataset.id];
+        const match = !term || q.prompt.toLowerCase().includes(term);
+        d.classList.toggle("hidden", !match);
+        if (match) shown++;
+      });
+      document.getElementById("countText").textContent = `Showing ${shown} of ${QUESTIONS.length}`;
+      document.getElementById("noResults").classList.toggle("hidden", shown !== 0);
+    };
+    input.addEventListener("input", apply);
+    apply();
+    document.getElementById("expandAll").onclick = () => app.querySelectorAll("details.rq:not(.hidden)").forEach(d => d.open = true);
+    document.getElementById("collapseAll").onclick = () => app.querySelectorAll("details.rq").forEach(d => d.open = false);
+    document.getElementById("homeBtn").onclick = () => renderHome();
+    scrollTop();
+  }
+
+  document.getElementById("logoBtn").onclick = () => { if (session) saveSession(); session = null; renderHome(); };
+
+  // ---------- boot: resume mid-quiz after refresh ----------
+  const saved = load(K_SESSION, null);
+  if (validSession(saved)) { session = saved; session.pending = session.pending || {}; renderQuiz(); }
+  else { if (saved) remove(K_SESSION); renderHome(); }
+})();
+</script>
+</body>
+</html>
