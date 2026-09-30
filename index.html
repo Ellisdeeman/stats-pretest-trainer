@@ -121,6 +121,20 @@
   .again-tag{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--red-bg);color:#fca5a5;margin-left:6px}
   .due-row{display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid var(--border)}
   .due-row:first-of-type{border-top:0}
+  .why{margin-bottom:8px;padding:8px 10px;border-left:3px solid var(--red);background:rgba(239,68,68,.07);border-radius:6px;font-size:16px}
+  .why b{color:#fca5a5}
+  .rq-body ul.ww{margin:8px 0 0;padding:0;list-style:none;font-size:14px;color:var(--muted)}
+  .rq-body .ww li{margin:4px 0}
+  .ww .wc{color:#fca5a5;font-weight:600}
+  .topic-card h3{margin:0 0 4px;font-size:18px}
+  .tbar{height:10px;background:#262c36;border-radius:999px;overflow:hidden;margin:8px 0}
+  .tbar>div{height:100%;border-radius:999px;background:var(--accent)}
+  .tmeta{display:flex;justify-content:space-between;gap:8px;font-size:14px;color:var(--muted);flex-wrap:wrap}
+  .tpct{font-weight:800;font-size:20px;color:var(--accent)}
+  .trow{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-radius:10px}
+  .trow+.trow{margin-top:4px}
+  .trow.weak{background:var(--red-bg);border:1px solid rgba(239,68,68,.4)}
+  .weak-tag{font-size:12px;font-weight:700;color:#fca5a5;margin-left:6px}
   .reset-link{color:var(--muted);font-size:14px;display:block;margin:4px auto 0}
   @media (min-width:700px){ main{padding-top:28px} h1{font-size:34px} }
 </style>
@@ -147,28 +161,51 @@ const QUESTIONS = [
     prompt: "The following is a partial relative frequency distribution of grades in an introductory statistics course.\n\nGrade | Relative Frequency\nA | 0.22\nB | ?\nC | 0.18\nD | 0.17\nE | 0.06\n\nFind the relative frequency for the B grade.",
     choices: [".47", ".37", ".27"],
     answer: ".37",
-    explanation: "Relative frequencies of all categories must sum to 1. 0.22 + 0.18 + 0.17 + 0.06 = 0.63, so B = 1 − 0.63 = 0.37."
+    explanation: "Relative frequencies of all categories must sum to 1. 0.22 + 0.18 + 0.17 + 0.06 = 0.63, so B = 1 − 0.63 = 0.37.",
+    topic: "Graphs & distributions",
+    whyWrong: {
+      ".47": "Adding .47 to the other grades (0.63) gives 1.10, but relative frequencies must total exactly 1.",
+      ".27": "Adding .27 to the other grades (0.63) gives only 0.90, so the frequencies would not sum to 1."
+    }
   },
   {
     id: 2,
     prompt: "Probabilities must be assigned to sample space outcomes so that the probability assigned to each sample space outcome must be between ______ inclusive.",
     choices: ["−1 and 1", "0 and 100", "0 and 1", "−100 and 100"],
     answer: "0 and 1",
-    explanation: "Kolmogorov axiom: any probability satisfies 0 ≤ P ≤ 1. Negative values are impossible; 0–100 would be a percent scale, not a probability."
+    explanation: "Kolmogorov axiom: any probability satisfies 0 ≤ P ≤ 1. Negative values are impossible; 0–100 would be a percent scale, not a probability.",
+    topic: "Probability",
+    whyWrong: {
+      "−1 and 1": "A probability can never be negative, so −1 is not an allowed lower bound.",
+      "0 and 100": "0 to 100 is the percent scale; as a probability the same values are written from 0 to 1.",
+      "−100 and 100": "Probabilities cannot be negative and cannot exceed 1, so this range is wrong at both ends."
+    }
   },
   {
     id: 3,
     prompt: "All of the following are used to describe quantitative data except the ________.",
     choices: ["stem-and-leaf chart", "histogram", "dot plot", "pie chart"],
     answer: "pie chart",
-    explanation: "Stem-and-leaf, histogram, and dot plot display numeric data. A pie chart is for categorical (qualitative) proportions."
+    explanation: "Stem-and-leaf, histogram, and dot plot display numeric data. A pie chart is for categorical (qualitative) proportions.",
+    topic: "Graphs & distributions",
+    whyWrong: {
+      "stem-and-leaf chart": "A stem-and-leaf display splits each numeric value into stem and leaf, so it is made for quantitative data.",
+      "histogram": "A histogram groups numeric values into classes, so it is a quantitative display.",
+      "dot plot": "A dot plot places each numeric value on a number line, so it describes quantitative data."
+    }
   },
   {
     id: 4,
     prompt: "Which of the following divides quantitative measurements into classes and graphs the frequency, relative frequency, or percentage frequency for each class?",
     choices: ["scatter plot", "histogram", "dot plot", "stem-and-leaf display"],
     answer: "histogram",
-    explanation: "A histogram bins quantitative values into classes and draws a bar for each class frequency. Scatter plots show paired variables; dot plots and stem-and-leaf keep individual values."
+    explanation: "A histogram bins quantitative values into classes and draws a bar for each class frequency. Scatter plots show paired variables; dot plots and stem-and-leaf keep individual values.",
+    topic: "Graphs & distributions",
+    whyWrong: {
+      "scatter plot": "A scatter plot shows the relationship between two paired quantitative variables, not class frequencies.",
+      "dot plot": "A dot plot shows every individual value as a dot rather than grouping values into classes.",
+      "stem-and-leaf display": "A stem-and-leaf display keeps the individual data values instead of graphing class frequencies as bars."
+    }
   },
   {
     id: 5,
@@ -180,21 +217,40 @@ const QUESTIONS = [
       "the specific employee \"John Smith\""
     ],
     answer: "each employee's annual salary",
-    explanation: "A variable is a characteristic that takes different values across units. Salary varies by employee. Head-count and the overall average are single summaries; John Smith is one observational unit."
+    explanation: "A variable is a characteristic that takes different values across units. Salary varies by employee. Head-count and the overall average are single summaries; John Smith is one observational unit.",
+    topic: "Data & variables",
+    whyWrong: {
+      "the company's total number of employees": "The total head count is one number for the whole company, so it does not vary from employee to employee.",
+      "the average salary across all departments": "An overall average is a single summary statistic, not a characteristic measured on each employee.",
+      "the specific employee \"John Smith\"": "John Smith is one unit (element) in the dataset, not a characteristic measured on the units."
+    }
   },
   {
     id: 6,
     prompt: "Which percentile describes the first quartile, Q1?",
     choices: ["25th", "100th", "50th", "75th"],
     answer: "25th",
-    explanation: "Q1 is the 25th percentile, Q2/median is the 50th, Q3 is the 75th, and the 100th is the maximum."
+    explanation: "Q1 is the 25th percentile, Q2/median is the 50th, Q3 is the 75th, and the 100th is the maximum.",
+    topic: "Center & spread",
+    whyWrong: {
+      "100th": "The 100th percentile is the maximum value, not the first quartile.",
+      "50th": "The 50th percentile is the median (Q2), not Q1.",
+      "75th": "The 75th percentile is the third quartile (Q3), not Q1."
+    }
   },
   {
     id: 7,
     prompt: "A ________ is a measure of the chance that an uncertain event will occur.",
     choices: ["probability", "complement", "population", "sample space", "random experiment"],
     answer: "probability",
-    explanation: "Probability is the numerical measure of likelihood. The other terms are related objects (event opposite, collection of units, set of outcomes, or the process), not the measure itself."
+    explanation: "Probability is the numerical measure of likelihood. The other terms are related objects (event opposite, collection of units, set of outcomes, or the process), not the measure itself.",
+    topic: "Probability",
+    whyWrong: {
+      "complement": "A complement is the event that A does not occur; it is an event, not a measure of chance.",
+      "population": "A population is the full set of units being studied, not a measure of chance.",
+      "sample space": "The sample space is the set of all possible outcomes, not the number measuring how likely they are.",
+      "random experiment": "A random experiment is the process that produces outcomes, not a measure of how likely they are."
+    }
   },
   {
     id: 8,
@@ -206,7 +262,13 @@ const QUESTIONS = [
       "compare proportions of different categories in a pie-like format."
     ],
     answer: "highlight the most frequent categories contributing to a problem or outcome.",
-    explanation: "A Pareto chart orders categorical bars from most to least frequent (often with a cumulative line) so the vital-few categories that drive a problem stand out. Histograms show quantitative distributions; pie charts show category proportions."
+    explanation: "A Pareto chart orders categorical bars from most to least frequent (often with a cumulative line) so the vital-few categories that drive a problem stand out. Histograms show quantitative distributions; pie charts show category proportions.",
+    topic: "Graphs & distributions",
+    whyWrong: {
+      "show the cumulative frequency of categories in a qualitative dataset.": "A Pareto chart may add a cumulative line, but its purpose is ordering categories so the biggest contributors stand out.",
+      "display the distribution of a single quantitative variable.": "Showing the distribution of one quantitative variable is the job of a histogram; Pareto charts are for categories.",
+      "compare proportions of different categories in a pie-like format.": "Pie charts show category proportions as slices; a Pareto chart uses bars sorted from tallest to shortest."
+    }
   },
   {
     id: 9,
@@ -219,49 +281,93 @@ const QUESTIONS = [
       "conditional probability"
     ],
     answer: "conditional probability",
-    explanation: "Conditional probability is P(A|B) = P(A ∩ B) / P(B): the chance of A given that B has occurred."
+    explanation: "Conditional probability is P(A|B) = P(A ∩ B) / P(B): the chance of A given that B has occurred.",
+    topic: "Probability",
+    whyWrong: {
+      "subjective probability": "A subjective probability is based on personal judgment, not on knowing that another event has occurred.",
+      "long-run relative frequency": "Long-run relative frequency is a way to estimate a probability from repeated trials; it has nothing to do with a given event.",
+      "complement of events": "The complement is the event that A does not occur, not a probability given another event.",
+      "sample space outcome": "A sample space outcome is a single possible result, not a probability."
+    }
   },
   {
     id: 10,
     prompt: "Which of the following is influenced the least by the occurrence of extreme values in a sample?",
     choices: ["geometric mean", "mean", "median", "weighted mean"],
     answer: "median",
-    explanation: "The median depends only on the middle position of ordered data, so extremes do not move it. Means (arithmetic, weighted, geometric) use every value and are pulled by outliers."
+    explanation: "The median depends only on the middle position of ordered data, so extremes do not move it. Means (arithmetic, weighted, geometric) use every value and are pulled by outliers.",
+    topic: "Center & spread",
+    whyWrong: {
+      "geometric mean": "The geometric mean multiplies every value together, so extreme values still pull it.",
+      "mean": "The mean adds up every value, so one extreme value can shift it a lot.",
+      "weighted mean": "A weighted mean still uses every value, so outliers still affect it (more so if they are heavily weighted)."
+    }
   },
   {
     id: 11,
     prompt: "A graphical portrayal of a quantitative data set that divides the data into classes and gives the frequency of each class is a(n) ________",
     choices: ["dot plot", "bar chart", "Pareto chart", "histogram", "ogive plot"],
     answer: "histogram",
-    explanation: "That is the definition of a histogram. Bar/Pareto charts are for categories; a dot plot plots individual points; an ogive graphs cumulative frequencies."
+    explanation: "That is the definition of a histogram. Bar/Pareto charts are for categories; a dot plot plots individual points; an ogive graphs cumulative frequencies.",
+    topic: "Graphs & distributions",
+    whyWrong: {
+      "dot plot": "A dot plot plots each individual value rather than grouping the data into classes.",
+      "bar chart": "Bar charts show frequencies of qualitative categories, not classes of quantitative data.",
+      "Pareto chart": "A Pareto chart is a bar chart of qualitative categories sorted by frequency.",
+      "ogive plot": "An ogive graphs cumulative frequencies, not the frequency of each class."
+    }
   },
   {
     id: 12,
     prompt: "The simultaneous occurrence of events A and B is represented by the notation ________.",
     choices: ["A ∩ B", "B|A", "A|B", "A ∪ B"],
     answer: "A ∩ B",
-    explanation: "Both events happening at once is the intersection A ∩ B. A ∪ B is either-or-both. A|B and B|A are conditionals."
+    explanation: "Both events happening at once is the intersection A ∩ B. A ∪ B is either-or-both. A|B and B|A are conditionals.",
+    topic: "Probability",
+    whyWrong: {
+      "B|A": "B|A means B given A, a conditional event, not both happening together.",
+      "A|B": "A|B means A given B, a conditional event, not both happening together.",
+      "A ∪ B": "A ∪ B is the union: A or B or both, not necessarily both."
+    }
   },
   {
     id: 13,
     prompt: "Events that have no sample space outcomes in common, and therefore cannot occur simultaneously, are ________",
     choices: ["unions", "mutually exclusive", "intersections", "independent"],
     answer: "mutually exclusive",
-    explanation: "Mutually exclusive (disjoint) events have empty intersection, so they cannot occur together. Independence is a probability factorization and still allows overlap."
+    explanation: "Mutually exclusive (disjoint) events have empty intersection, so they cannot occur together. Independence is a probability factorization and still allows overlap.",
+    topic: "Probability",
+    whyWrong: {
+      "unions": "A union combines outcomes from either event; it does not describe events that can't occur together.",
+      "intersections": "An intersection is the set of outcomes the events share, which is exactly what these events lack.",
+      "independent": "Independent events can occur together; independence means one doesn't change the other's probability."
+    }
   },
   {
     id: 14,
     prompt: "If two events are independent, we can ________ their probabilities to determine the intersection probability.",
     choices: ["divide", "subtract", "add", "multiply"],
     answer: "multiply",
-    explanation: "Independence means P(A ∩ B) = P(A) × P(B). Addition is for unions (especially disjoint unions)."
+    explanation: "Independence means P(A ∩ B) = P(A) × P(B). Addition is for unions (especially disjoint unions).",
+    topic: "Probability",
+    whyWrong: {
+      "divide": "Dividing probabilities is used in conditional probability, not to find the intersection of independent events.",
+      "subtract": "Subtraction shows up in complements and the addition rule, not in P(A ∩ B) for independent events.",
+      "add": "Adding probabilities gives a union (for mutually exclusive events), not an intersection."
+    }
   },
   {
     id: 15,
     prompt: "A survey of customer satisfaction with a product yields responses of \"Very Satisfied,\" \"Satisfied,\" \"Neutral,\" \"Dissatisfied,\" and \"Very Dissatisfied.\" Which graphical display is MOST appropriate to summarize this data?",
     choices: ["line graph", "pie chart", "histogram", "scatter plot"],
     answer: "pie chart",
-    explanation: "The variable is categorical (ordinal Likert). Among the listed graphs, only a pie chart is meant for category proportions. Histogram/scatter/line graphs need quantitative data."
+    explanation: "The variable is categorical (ordinal Likert). Among the listed graphs, only a pie chart is meant for category proportions. Histogram/scatter/line graphs need quantitative data.",
+    topic: "Graphs & distributions",
+    whyWrong: {
+      "line graph": "A line graph shows a quantitative value changing over time, not category counts.",
+      "histogram": "A histogram needs quantitative data grouped into numeric classes, and satisfaction levels are categories.",
+      "scatter plot": "A scatter plot needs two paired quantitative variables, and this survey has one categorical variable."
+    }
   },
   {
     id: 16,
@@ -273,21 +379,40 @@ const QUESTIONS = [
       "the weight of a package in grams"
     ],
     answer: "the brand of a car",
-    explanation: "Brand is a category label. Pages, temperature, and weight are quantitative."
+    explanation: "Brand is a category label. Pages, temperature, and weight are quantitative.",
+    topic: "Data & variables",
+    whyWrong: {
+      "the number of pages in a book": "Page count is a number you can count and do arithmetic with, so it is quantitative.",
+      "the temperature in degrees Celsius": "Temperature is a numeric measurement, so it is quantitative.",
+      "the weight of a package in grams": "Weight is a numeric measurement, so it is quantitative."
+    }
   },
   {
     id: 17,
     prompt: "In a hearing test, subjects estimate the loudness (in decibels) of a sound, and the results are: 68, 67, 70, 71, 68, 75, 68, 62, 80, 73, 68. What is the median?",
     choices: ["68", "71", "70", "80", "75"],
     answer: "68",
-    explanation: "n = 11 (odd). Ordered: 62, 67, 68, 68, 68, 68, 70, 71, 73, 75, 80. The 6th value is 68."
+    explanation: "n = 11 (odd). Ordered: 62, 67, 68, 68, 68, 68, 70, 71, 73, 75, 80. The 6th value is 68.",
+    topic: "Center & spread",
+    whyWrong: {
+      "71": "71 is the 8th value in ordered order, not the middle (6th) of 11 values.",
+      "70": "70 is the 7th ordered value, one position past the middle.",
+      "80": "80 is the maximum, not the middle value.",
+      "75": "75 is the 10th ordered value, near the top of the data."
+    }
   },
   {
     id: 18,
     prompt: "Probabilities must be assigned to each sample space outcome so that the probabilities of all the sample space outcomes add up to ________.",
     choices: ["1", "0", "between 0 and 1", "between −1 and 1"],
     answer: "1",
-    explanation: "The probabilities of all mutually exclusive sample-space outcomes sum to 1. Individual probabilities lie in [0, 1], but the total is exactly 1."
+    explanation: "The probabilities of all mutually exclusive sample-space outcomes sum to 1. Individual probabilities lie in [0, 1], but the total is exactly 1.",
+    topic: "Probability",
+    whyWrong: {
+      "0": "The outcomes must cover every possibility, so their total is certain (1), not 0.",
+      "between 0 and 1": "Each individual probability lies between 0 and 1, but the total over all outcomes must be exactly 1.",
+      "between −1 and 1": "Probabilities are never negative, and the total over all outcomes must be exactly 1."
+    }
   },
   {
     id: 19,
@@ -299,77 +424,146 @@ const QUESTIONS = [
       "median would be equal to the mean"
     ],
     answer: "median would be less than the mean",
-    explanation: "Right-skew (long right tail) pulls the mean to the right of the median, so median < mean."
+    explanation: "Right-skew (long right tail) pulls the mean to the right of the median, so median < mean.",
+    topic: "Center & spread",
+    whyWrong: {
+      "mode would be equal to the mean": "In a right-skewed distribution the mode is usually the smallest of the three, well below the mean.",
+      "median would be greater than the mean": "That describes left skew; a long right tail pulls the mean above the median.",
+      "median would be equal to the mean": "Mean and median are equal in symmetric distributions, not skewed ones."
+    }
   },
   {
     id: 20,
     prompt: "Any characteristic of an element is called a ________.",
     choices: ["variable", "census", "process", "set"],
     answer: "variable",
-    explanation: "In statistics, a characteristic measured or classified on an element (unit) is a variable."
+    explanation: "In statistics, a characteristic measured or classified on an element (unit) is a variable.",
+    topic: "Data & variables",
+    whyWrong: {
+      "census": "A census is a survey of every unit in a population, not a characteristic of an element.",
+      "process": "A process is a sequence of operations producing outputs over time, not a characteristic of an element.",
+      "set": "A set is a collection of objects, not a characteristic measured on an element."
+    }
   },
   {
     id: 21,
     prompt: "A company collected the ages from a random sample of its middle managers, with the resulting frequency distribution:\n\nClass Interval | Frequency\n20 to <25 | 8\n25 to <30 | 6\n30 to <35 | 5\n35 to <40 | 12\n40 to <45 | 15\n45 to <50 | 7\n\nWhat would be the approximate shape of the relative frequency histogram?",
     choices: ["uniform", "linear", "skewed to the left", "skewed to the right", "bell-shaped / symmetric"],
     answer: "skewed to the left",
-    explanation: "Frequencies: 8, 6, 5, 12, 15, 7. The peak is in 40–<45 (toward the right of the range) with a longer, lower tail on the left, which is left-skewed (negative skew). Not uniform and not linear."
+    explanation: "Frequencies: 8, 6, 5, 12, 15, 7. The peak is in 40–<45 (toward the right of the range) with a longer, lower tail on the left, which is left-skewed (negative skew). Not uniform and not linear.",
+    topic: "Graphs & distributions",
+    whyWrong: {
+      "uniform": "A uniform shape needs roughly equal frequencies, but these range from 5 to 15.",
+      "linear": "\"Linear\" describes a relationship between two variables, not the shape of a histogram.",
+      "skewed to the right": "Right skew has its peak on the left and a long tail to the right; here the peak (40 to <45) is on the right.",
+      "bell-shaped / symmetric": "The peak is not in the middle and the two sides don't mirror each other, so it isn't symmetric."
+    }
   },
   {
     id: 22,
     prompt: "In a statistics class, the following 10 scores were randomly selected: 74, 73, 77, 77, 71, 68, 65, 77, 67, 66. What is the mode?",
     choices: ["72.0", "77.0", "71.0", "73.0", "71.5"],
     answer: "77.0",
-    explanation: "77 appears three times; every other score appears once. The mode is 77.0."
+    explanation: "77 appears three times; every other score appears once. The mode is 77.0.",
+    topic: "Center & spread",
+    whyWrong: {
+      "72.0": "72.0 is the median (average of 71 and 73), not the most frequent value.",
+      "71.0": "71 appears only once, while 77 appears three times.",
+      "73.0": "73 appears only once, while 77 appears three times.",
+      "71.5": "71.5 is the mean (715/10), not the most frequent value."
+    }
   },
   {
     id: 23,
     prompt: "The ________ of two events A and B is the event that consists of the sample space outcomes belonging to both event A and event B.",
     choices: ["mutual exclusivity", "intersection", "union", "complement"],
     answer: "intersection",
-    explanation: "Outcomes in both A and B form the intersection A ∩ B."
+    explanation: "Outcomes in both A and B form the intersection A ∩ B.",
+    topic: "Probability",
+    whyWrong: {
+      "mutual exclusivity": "Mutual exclusivity means the events share no outcomes, which is the opposite of outcomes in both.",
+      "union": "The union includes outcomes in A or B or both, not only outcomes in both.",
+      "complement": "The complement of an event is every outcome not in that event."
+    }
   },
   {
     id: 24,
     prompt: "When developing a frequency distribution, the class (group) intervals must be ________",
     choices: ["integer", "small", "large", "nonoverlapping", "equal"],
     answer: "nonoverlapping",
-    explanation: "Classes must be mutually exclusive so each observation falls in exactly one class. Equal width is preferred but not required; integer endpoints and size are not mandatory."
+    explanation: "Classes must be mutually exclusive so each observation falls in exactly one class. Equal width is preferred but not required; integer endpoints and size are not mandatory.",
+    topic: "Graphs & distributions",
+    whyWrong: {
+      "integer": "Class limits can be decimals; nothing requires them to be integers.",
+      "small": "There is no rule that classes must be small; very small classes can leave the distribution too spread out to read.",
+      "large": "There is no rule that classes must be large; very wide classes hide the shape of the data.",
+      "equal": "Equal widths are recommended but not required; classes must not overlap, though."
+    }
   },
   {
     id: 25,
     prompt: "The ________ of two events X and Y is another event that consists of the sample space outcomes belonging to either event X or event Y or both events X and Y.",
     choices: ["complement", "intersection", "union", "conditional probability"],
     answer: "union",
-    explanation: "That is the union X ∪ Y."
+    explanation: "That is the union X ∪ Y.",
+    topic: "Probability",
+    whyWrong: {
+      "complement": "The complement of X is every outcome not in X, not outcomes in X or Y.",
+      "intersection": "The intersection includes only outcomes in both X and Y, not in either one.",
+      "conditional probability": "Conditional probability is a probability of one event given another, not an event made of outcomes."
+    }
   },
   {
     id: 26,
     prompt: "Which of the following graphs is best suited for displaying the distribution of continuous quantitative data, such as income or age?",
     choices: ["Pareto chart", "histogram", "bar chart", "pie chart"],
     answer: "histogram",
-    explanation: "Continuous quantitative variables are grouped into intervals and shown with a histogram. Pareto/bar/pie charts are for categorical data."
+    explanation: "Continuous quantitative variables are grouped into intervals and shown with a histogram. Pareto/bar/pie charts are for categorical data.",
+    topic: "Graphs & distributions",
+    whyWrong: {
+      "Pareto chart": "A Pareto chart ranks qualitative categories; it doesn't show the distribution of a continuous variable.",
+      "bar chart": "Bar charts show counts for separate categories, not continuous numeric intervals.",
+      "pie chart": "Pie charts show category proportions and can't show the shape of a continuous distribution."
+    }
   },
   {
     id: 27,
     prompt: "The average of the squared deviations of the individual population measurement from the population mean is the ________",
     choices: ["range", "mean", "median", "variance", "standard deviation"],
     answer: "variance",
-    explanation: "Population variance σ² = Σ(xᵢ − μ)² / N. Standard deviation is the square root of that quantity."
+    explanation: "Population variance σ² = Σ(xᵢ − μ)² / N. Standard deviation is the square root of that quantity.",
+    topic: "Center & spread",
+    whyWrong: {
+      "range": "The range is the maximum minus the minimum and doesn't use deviations from the mean.",
+      "mean": "The mean is the average of the measurements themselves, not of their squared deviations.",
+      "median": "The median is the middle value, not an average of squared deviations.",
+      "standard deviation": "The standard deviation is the square root of that average, so it is not the average itself."
+    }
   },
   {
     id: 28,
     prompt: "A relative frequency histogram having a longer tail to the right than to the left is said to be ________",
     choices: ["normal", "skewed to the left", "a scatter plot", "skewed to the right"],
     answer: "skewed to the right",
-    explanation: "A longer right tail is right-skew (positive skew)."
+    explanation: "A longer right tail is right-skew (positive skew).",
+    topic: "Graphs & distributions",
+    whyWrong: {
+      "normal": "A normal distribution is symmetric, with equal tails on both sides.",
+      "skewed to the left": "Left skew means the longer tail is on the left, not the right.",
+      "a scatter plot": "A scatter plot is a different graph type (two variables), not a shape of a histogram."
+    }
   },
   {
     id: 29,
     prompt: "Consider the following data on distances traveled by people to visit the local amusement park and calculate the relative frequency for the shortest distance.\n\nDistance | Frequency\n1–8 miles | 15\n9–16 miles | 12\n17–24 miles | 7\n25–32 miles | 5\n33–40 miles | 1",
     choices: [".150", ".375", ".300"],
     answer: ".375",
-    explanation: "Shortest class is 1–8 miles (freq 15). Total n = 15+12+7+5+1 = 40. Relative frequency = 15/40 = 0.375."
+    explanation: "Shortest class is 1–8 miles (freq 15). Total n = 15+12+7+5+1 = 40. Relative frequency = 15/40 = 0.375.",
+    topic: "Graphs & distributions",
+    whyWrong: {
+      ".150": ".150 treats 15 as out of 100, but the total frequency is 40 (15/40 = .375).",
+      ".300": ".300 is 12/40, the relative frequency of the 9–16 mile class, not the shortest distance class."
+    }
   },
   {
     id: 30,
@@ -381,7 +575,13 @@ const QUESTIONS = [
       "always in the first quartile"
     ],
     answer: "an outlier",
-    explanation: "Points beyond the fences (typically Q3 + 1.5×IQR) are plotted as outliers. They are not automatically the max, not inside the lower fence, and not in Q1."
+    explanation: "Points beyond the fences (typically Q3 + 1.5×IQR) are plotted as outliers. They are not automatically the max, not inside the lower fence, and not in Q1.",
+    topic: "Center & spread",
+    whyWrong: {
+      "always the largest value in the data set": "An outlier is often the largest value but not always; data can have several upper outliers, and only one can be the max.",
+      "within the lower limits": "A value beyond the upper limit is outside the fences, not within the lower limits.",
+      "always in the first quartile": "The first quartile is at the low end of the data, while this value lies above the upper limit."
+    }
   },
   {
     id: 31,
@@ -393,21 +593,40 @@ const QUESTIONS = [
       "stem-and-leaf, pie chart"
     ],
     answer: "bar chart, histogram",
-    explanation: "Bar chart → categorical frequencies. Histogram → quantitative class frequencies."
+    explanation: "Bar chart → categorical frequencies. Histogram → quantitative class frequencies.",
+    topic: "Graphs & distributions",
+    whyWrong: {
+      "histogram, stem-and-leaf display": "A histogram is for quantitative data, not qualitative, so the first blank is wrong.",
+      "scatter plot, bar chart": "Scatter plots show two quantitative variables and bar charts are for qualitative data, so neither blank is right.",
+      "stem-and-leaf, pie chart": "Stem-and-leaf displays are quantitative and pie charts are qualitative, which is the reverse of what the blanks ask."
+    }
   },
   {
     id: 32,
     prompt: "________ is the science of using a sample to make generalizations about the important aspects of a population.",
     choices: ["Random sample", "Statistical inference", "Descriptive statistics", "Time series analysis"],
     answer: "Statistical inference",
-    explanation: "Inferential statistics uses sample data to conclude about a population. Descriptive stats only summarize the sample."
+    explanation: "Inferential statistics uses sample data to conclude about a population. Descriptive stats only summarize the sample.",
+    topic: "Data & variables",
+    whyWrong: {
+      "Random sample": "A random sample is the data you collect, not the science of generalizing from it.",
+      "Descriptive statistics": "Descriptive statistics only summarize the data you have and don't generalize to a population.",
+      "Time series analysis": "Time series analysis studies data collected over time, not generalizing from a sample to a population."
+    }
   },
   {
     id: 33,
     prompt: "In a statistics class, 10 scores were randomly selected with the following results: 74, 73, 77, 77, 71, 68, 65, 77, 67, 66. What are the lower and upper limits of a box-and-whiskers display of this data?",
     choices: ["67, 77", "57, 87", "47, 97", "37, 107", "52, 92"],
     answer: "52, 92",
-    explanation: "Ordered: 65, 66, 67, 68, 71, 73, 74, 77, 77, 77. Q1 = 67, Q3 = 77, IQR = 10. Fences: 67 − 1.5×10 = 52 and 77 + 1.5×10 = 92. Those fences are the lower/upper limits used to flag outliers. (All data lie inside, so whiskers run min 65 to max 77, but the listed matching choice is the fences.)"
+    explanation: "Ordered: 65, 66, 67, 68, 71, 73, 74, 77, 77, 77. Q1 = 67, Q3 = 77, IQR = 10. Fences: 67 − 1.5×10 = 52 and 77 + 1.5×10 = 92. Those fences are the lower/upper limits used to flag outliers. (All data lie inside, so whiskers run min 65 to max 77, but the listed matching choice is the fences.)",
+    topic: "Center & spread",
+    whyWrong: {
+      "67, 77": "67 and 77 are Q1 and Q3 (the ends of the box), not the fences 1.5×IQR beyond them.",
+      "57, 87": "57 and 87 are only 1×IQR beyond the quartiles; the limits use 1.5×IQR = 15.",
+      "47, 97": "47 and 97 are 2×IQR beyond the quartiles; the limits use 1.5×IQR = 15.",
+      "37, 107": "37 and 107 are 3×IQR beyond the quartiles (outer fences for extreme outliers), not the standard 1.5×IQR limits."
+    }
   },
   {
     id: 34,
@@ -419,77 +638,147 @@ const QUESTIONS = [
       "multiplication rule"
     ],
     answer: "addition rule",
-    explanation: "This is the general addition rule for any two events. If they were mutually exclusive the intersection term would be 0."
+    explanation: "This is the general addition rule for any two events. If they were mutually exclusive the intersection term would be 0.",
+    topic: "Probability",
+    whyWrong: {
+      "addition rule for two mutually exclusive events": "For mutually exclusive events, P(A ∩ B) = 0, so that rule has no subtraction term.",
+      "conditional probability": "Conditional probability is P(A|B) = P(A ∩ B)/P(B), a ratio rather than a sum.",
+      "multiplication rule": "The multiplication rule gives P(A ∩ B) as a product, not P(A ∪ B)."
+    }
   },
   {
     id: 35,
     prompt: "The number of ways to arrange x successes among n trials is equal to",
     choices: ["n / x", "n! / (n − x)!", "n! / [x! (n − x)!]", "n! / x!"],
     answer: "n! / [x! (n − x)!]",
-    explanation: "That is the combination C(n, x) = n! / (x!(n−x)!), the number of ways to choose the success positions."
+    explanation: "That is the combination C(n, x) = n! / (x!(n−x)!), the number of ways to choose the success positions.",
+    topic: "Probability",
+    whyWrong: {
+      "n / x": "n / x is just a ratio of counts and doesn't count arrangements at all.",
+      "n! / (n − x)!": "n!/(n − x)! counts ordered arrangements (permutations), which overcounts by x!.",
+      "n! / x!": "n!/x! leaves out the (n − x)! for the failures, so it overcounts."
+    }
   },
   {
     id: 36,
     prompt: "Statistical ________ refers to using a sample of measurements and making generalizations about the important aspects of a population.",
     choices: ["sampling", "analysis", "inference", "process"],
     answer: "inference",
-    explanation: "Statistical inference is using a sample to generalize to a population."
+    explanation: "Statistical inference is using a sample to generalize to a population.",
+    topic: "Data & variables",
+    whyWrong: {
+      "sampling": "Sampling is how you collect the measurements, not the act of generalizing from them.",
+      "analysis": "\"Analysis\" is too general; generalizing from a sample to a population is specifically inference.",
+      "process": "A process is a sequence of operations producing output over time, not generalizing from a sample."
+    }
   },
   {
     id: 37,
     prompt: "A company collected the ages from a random sample of its middle managers:\n\nClass Interval | Frequency\n20 to <25 | 8\n25 to <30 | 6\n30 to <35 | 5\n35 to <40 | 12\n40 to <45 | 15\n45 to <50 | 7\n\nWhat is the relative frequency for the class with the greatest frequency?",
     choices: [".283", ".288", ".132", ".226"],
     answer: ".283",
-    explanation: "Largest frequency is 15 (40 to <45). Total n = 8+6+5+12+15+7 = 53. 15/53 ≈ 0.283. .288 is the 15/52 distractor; .132 is 7/53."
+    explanation: "Largest frequency is 15 (40 to <45). Total n = 8+6+5+12+15+7 = 53. 15/53 ≈ 0.283. .288 is the 15/52 distractor; .132 is 7/53.",
+    topic: "Graphs & distributions",
+    whyWrong: {
+      ".288": ".288 is 15/52, which uses the wrong total; the frequencies add to 53.",
+      ".132": ".132 is 7/53, the relative frequency of the 45 to <50 class, not the largest class.",
+      ".226": ".226 is 12/53, the relative frequency of the 35 to <40 class, not the largest class."
+    }
   },
   {
     id: 38,
     prompt: "A quantity that measures the variation of a population or a sample relative to its mean is called the ________",
     choices: ["variance", "standard deviation", "coefficient of variation", "interquartile range", "range"],
     answer: "coefficient of variation",
-    explanation: "CV = (standard deviation) / mean, so it measures spread relative to the mean. Variance and SD are absolute spread."
+    explanation: "CV = (standard deviation) / mean, so it measures spread relative to the mean. Variance and SD are absolute spread.",
+    topic: "Center & spread",
+    whyWrong: {
+      "variance": "Variance measures spread in squared units and is not scaled by the mean.",
+      "standard deviation": "Standard deviation measures spread in the data's units and is not divided by the mean.",
+      "interquartile range": "The IQR is Q3 − Q1, spread of the middle half, not relative to the mean.",
+      "range": "The range is max − min and has no connection to the mean."
+    }
   },
   {
     id: 39,
     prompt: "The set of all possible outcomes for an experiment is called a(n) ________.",
     choices: ["event", "probability", "experiment", "sample space"],
     answer: "sample space",
-    explanation: "The sample space is the set of all possible outcomes. An event is a subset of that set."
+    explanation: "The sample space is the set of all possible outcomes. An event is a subset of that set.",
+    topic: "Probability",
+    whyWrong: {
+      "event": "An event is a subset of outcomes, not necessarily all of them.",
+      "probability": "A probability is a number measuring chance, not a set of outcomes.",
+      "experiment": "The experiment is the process that produces outcomes, not the set of outcomes."
+    }
   },
   {
     id: 40,
     prompt: "In a statistics class, 10 scores were randomly selected with the following results: 74, 73, 77, 77, 71, 68, 65, 77, 67, 66. What is the 65th percentile?",
     choices: ["74.0", "77.0", "66.75", "67.3", "65.5"],
     answer: "74.0",
-    explanation: "Ordered: 65, 66, 67, 68, 71, 73, 74, 77, 77, 77. Location (0.65)(10) = 6.5; common intro-stats rule rounds a non-integer location up, so use the 7th value = 74. Interpolation methods also land near 74."
+    explanation: "Ordered: 65, 66, 67, 68, 71, 73, 74, 77, 77, 77. Location (0.65)(10) = 6.5; common intro-stats rule rounds a non-integer location up, so use the 7th value = 74. Interpolation methods also land near 74.",
+    topic: "Center & spread",
+    whyWrong: {
+      "77.0": "77 is the 8th ordered value or higher, which is about the 80th percentile or above, not the 65th.",
+      "66.75": "66.75 falls between the 2nd and 3rd ordered values, around the 25th percentile, not the 65th.",
+      "67.3": "67.3 falls between the 3rd and 4th ordered values, around the 30th percentile, far below the 65th.",
+      "65.5": "65.5 falls between the two smallest values, around the 10th–15th percentile."
+    }
   },
   {
     id: 41,
     prompt: "A ________ is a subset of the units in a population.",
     choices: ["census", "sample", "process", "variable"],
     answer: "sample",
-    explanation: "A sample is a subset of population units. A census includes every unit."
+    explanation: "A sample is a subset of population units. A census includes every unit.",
+    topic: "Data & variables",
+    whyWrong: {
+      "census": "A census includes every unit in the population, not a subset.",
+      "process": "A process is a sequence of operations producing output over time, not a subset of units.",
+      "variable": "A variable is a characteristic measured on units, not a group of units."
+    }
   },
   {
     id: 42,
     prompt: "Container 1 has 8 items, 3 of which are defective. Container 2 has 5 items, 2 of which are defective. If one item is drawn from each container, what is the probability that the item from Container 1 is defective and the item from Container 2 is not defective?",
     choices: ["0.2250", "0.6154", "0.1500", "0.3846", "0.3750"],
     answer: "0.2250",
-    explanation: "Independent draws: P(D1 and G2) = (3/8)×(3/5) = 9/40 = 0.2250."
+    explanation: "Independent draws: P(D1 and G2) = (3/8)×(3/5) = 9/40 = 0.2250.",
+    topic: "Probability",
+    whyWrong: {
+      "0.6154": "0.6154 is 8/13, which pools both containers together instead of multiplying the separate probabilities.",
+      "0.1500": "0.1500 is (3/8)(2/5), the chance both items are defective; you need Container 2 to be non-defective (3/5).",
+      "0.3846": "0.3846 is 5/13, the pooled defective rate, which ignores the two separate draws.",
+      "0.3750": "0.3750 is just P(defective from Container 1) = 3/8 and leaves out the 3/5 for Container 2."
+    }
   },
   {
     id: 43,
     prompt: "Which percentile describes the third quartile, Q3?",
     choices: ["100th", "25th", "75th", "50th"],
     answer: "75th",
-    explanation: "Q3 is the 75th percentile. Q1 = 25th, median = 50th, max = 100th."
+    explanation: "Q3 is the 75th percentile. Q1 = 25th, median = 50th, max = 100th.",
+    topic: "Center & spread",
+    whyWrong: {
+      "100th": "The 100th percentile is the maximum, not Q3.",
+      "25th": "The 25th percentile is the first quartile (Q1), not Q3.",
+      "50th": "The 50th percentile is the median (Q2), not Q3."
+    }
   },
   {
     id: 44,
     prompt: "In a statistics class, the following 10 scores were randomly selected: 74, 73, 77, 77, 71, 68, 65, 77, 67, 66. What is the mean?",
     choices: ["71.5", "72.0", "73.0", "77.0", "71.0"],
     answer: "71.5",
-    explanation: "Sum = 74+73+77+77+71+68+65+77+67+66 = 715. Mean = 715/10 = 71.5."
+    explanation: "Sum = 74+73+77+77+71+68+65+77+67+66 = 715. Mean = 715/10 = 71.5.",
+    topic: "Center & spread",
+    whyWrong: {
+      "72.0": "72.0 is the median (average of 71 and 73), not the mean.",
+      "73.0": "73 is one of the scores, not the sum of 715 divided by 10.",
+      "77.0": "77 is the mode (appears three times), not the mean.",
+      "71.0": "71.0 would need a sum of 710, but the scores add to 715 (715/10 = 71.5)."
+    }
   }
 ];
 
@@ -500,6 +789,8 @@ const QUESTIONS = [
   const K_SESSION = "statsPretest.session";
   const K_PREFS = "statsPretest.prefs";
   const K_SRS = "statsPretest.srs";
+  const K_STATS = "statsPretest.stats";   // {id: {attempts, correct, history:[1,0,...] (last 20), lastSeen}}
+  const TOPICS = ["Data & variables", "Graphs & distributions", "Center & spread", "Probability"];
   const NEW_PER_DAY = 10;
   const LADDER = [1, 3, 7, 16, 35];
   const BY_ID = {};
@@ -612,6 +903,65 @@ const QUESTIONS = [
     const repeat = s.mode === "due" && s.ids.slice(0, s.index).includes(id);
     srs[id] = scheduleCard(s.srPrev[k], correct, "knew", !repeat);
     save(K_SRS, srs);
+    const stats = getStats();
+    const e = stats[id] || { attempts: 0, correct: 0, history: [] };
+    e.attempts++; if (correct) e.correct++;
+    e.history = (e.history || []).concat(correct ? 1 : 0).slice(-20);
+    e.lastSeen = nowDate().toISOString();
+    stats[id] = e; save(K_STATS, stats);
+  }
+  function getStats(){ const v = load(K_STATS, {}); return v && typeof v === "object" && !Array.isArray(v) ? v : {}; }
+  // per-topic breakdown from a list of {id, correct}
+  function topicBreakdown(results){
+    const by = {};
+    results.forEach(r => { const t = BY_ID[r.id].topic; by[t] = by[t] || { n: 0, c: 0 }; by[t].n++; if (r.correct) by[t].c++; });
+    const rows = TOPICS.filter(t => by[t]).map(t => ({ topic: t, n: by[t].n, c: by[t].c, pct: Math.round(by[t].c / by[t].n * 100) }));
+    let weak = null;
+    rows.forEach(r => { if (r.c < r.n && (!weak || r.pct < weak.pct || (r.pct === weak.pct && r.n - r.c > weak.n - weak.c))) weak = r; });
+    return { rows, weak };
+  }
+  function topicBreakdownHtml(results){
+    const { rows, weak } = topicBreakdown(results);
+    return `<div class="card" id="topicBreakdown"><h2>By topic</h2>
+      ${rows.map(r => `<div class="trow ${weak && weak.topic === r.topic ? "weak" : ""}" data-topic="${esc(r.topic)}">
+        <span>${esc(r.topic)}${weak && weak.topic === r.topic ? '<span class="weak-tag">WEAKEST</span>' : ""}</span>
+        <span class="muted">${r.c}/${r.n} · ${r.pct}%</span></div>`).join("")}
+      ${weak ? `<button class="btn" id="practiceWeak" style="margin-top:10px">Practice ${esc(weak.topic)}</button>` : `<div class="muted" style="font-size:14px;margin-top:6px">No weak spots this session.</div>`}
+    </div>`;
+  }
+  function wireWeak(results){
+    const { weak } = topicBreakdown(results);
+    const b = document.getElementById("practiceWeak");
+    if (b && weak) b.onclick = () => startQuiz("topic", weak.topic);
+  }
+  function renderTopics(){
+    const stats = getStats(), srs = getSrs();
+    const cards = TOPICS.map(t => {
+      const qs = QUESTIONS.filter(q => q.topic === t);
+      let a = 0, c = 0, mastered = 0, seen = 0;
+      qs.forEach(q => { const e = stats[q.id]; if (e) { a += e.attempts; c += e.correct; seen++; }
+        if (srs[q.id] && (srs[q.id].interval || 0) >= 7) mastered++; });
+      const pct = a ? Math.round(c / a * 100) : null;
+      return `<div class="card topic-card" data-topic="${esc(t)}">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+          <h3>${esc(t)}</h3><span class="tpct">${pct == null ? "—" : pct + "%"}</span></div>
+        <div class="tbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct || 0}"><div style="width:${pct || 0}%;${pct != null && pct < 60 ? "background:var(--red)" : pct != null && pct < 80 ? "background:#eab308" : ""}"></div></div>
+        <div class="tmeta"><span>${a} attempt${a === 1 ? "" : "s"} · ${seen}/${qs.length} seen</span><span>Mastered ${mastered}/${qs.length}</span></div>
+        <button class="btn" style="margin-top:12px" data-practice="${esc(t)}">Practice this topic (${qs.length})</button>
+      </div>`;
+    }).join("");
+    app.innerHTML = `
+      <div class="stack">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+          <h2 style="margin:0">Progress by topic</h2>
+          <button class="link" id="homeBtn">← Home</button>
+        </div>
+        <div class="muted" style="font-size:14px">Accuracy counts every answer in any mode. Mastered = next review 7+ days out.</div>
+        ${cards}
+      </div>`;
+    app.querySelectorAll("[data-practice]").forEach(b => b.onclick = () => startQuiz("topic", b.dataset.practice));
+    document.getElementById("homeBtn").onclick = () => renderHome();
+    scrollTop();
   }
   function setConfidence(s, k, id, conf){
     if (!s.srPrev || !Object.prototype.hasOwnProperty.call(s.srPrev, k)) return;
@@ -645,7 +995,7 @@ const QUESTIONS = [
     seen.forEach(id => { const d = srs[id] && srs[id].due; if (d) byDay[d] = (byDay[d] || 0) + 1; });
     lastResult = { mode: "due", reviewed: seen.length, attempts: s.ids.length, correct,
       percent: seen.length ? Math.round(correct / seen.length * 1000) / 10 : 0,
-      missed: seen.filter(id => !first[id]), byDay };
+      missed: seen.filter(id => !first[id]), byDay, results: seen.map(id => ({ id, correct: first[id] })) };
     session = null;
     remove(K_SESSION);
     renderDueResults();
@@ -670,11 +1020,13 @@ const QUESTIONS = [
         ${r.missed.length ? `<div class="card" id="missedList"><h2>Missed first time (${r.missed.length})</h2>
           ${r.missed.map(id => { const q = BY_ID[id]; return `<div class="miss-item"><div class="miss-stem"><span style="color:var(--accent)">#${q.id}</span> ${esc(shortStem(q))}</div><div class="ans-line ans-right">Correct: ${esc(q.answer)}</div></div>`; }).join("")}
         </div>` : ""}
+        ${topicBreakdownHtml(r.results)}
         <div class="btn-row">
           <button class="btn btn-primary" id="homeBtn">Home</button>
           <button class="btn" id="reviewAll">Review all</button>
         </div>
       </div>`;
+    wireWeak(r.results);
     document.getElementById("homeBtn").onclick = () => renderHome();
     document.getElementById("reviewAll").onclick = () => renderReview();
     scrollTop();
@@ -692,14 +1044,17 @@ const QUESTIONS = [
       typeof s.index === "number" && s.index >= 0 && s.index < s.ids.length && s.answers && typeof s.answers === "object";
   }
 
-  function startQuiz(mode){
+  function startQuiz(mode, topic){
     const prefs = getPrefs();
-    let ids = mode === "missed" ? getMissed() : QUESTIONS.map(q => q.id);
+    let ids = mode === "missed" ? getMissed()
+      : mode === "topic" ? QUESTIONS.filter(q => q.topic === topic).map(q => q.id)
+      : QUESTIONS.map(q => q.id);
     if (!ids.length) { renderHome(); return; }
     if (prefs.shuffleQ) ids = shuffle(ids);
     const choiceOrder = {};
     ids.forEach(id => { const c = BY_ID[id].choices; choiceOrder[id] = prefs.shuffleC ? shuffle(c) : c.slice(); });
     session = { mode, ids, choiceOrder, index: 0, answers: {}, pending: {}, started: new Date().toISOString() };
+    if (mode === "topic") session.topic = topic;
     saveSession();
     renderQuiz();
   }
@@ -717,7 +1072,7 @@ const QUESTIONS = [
 
     // Update missed ids
     let stored;
-    if (s.mode === "missed") {
+    if (s.mode === "missed" || s.mode === "topic") {
       // Remove questions now answered correctly; keep everything else previously missed
       const nowCorrect = new Set(s.ids.filter(id => s.answers[id] === BY_ID[id].answer));
       stored = getMissed().filter(id => !nowCorrect.has(id));
@@ -727,7 +1082,8 @@ const QUESTIONS = [
     }
     save(K_MISSED, stored.sort((a,b)=>a-b));
 
-    lastResult = { correct, total, percent, missed, mode: s.mode };
+    lastResult = { correct, total, percent, missed, mode: s.mode, topic: s.topic,
+      results: s.ids.map(id => ({ id, correct: s.answers[id] === BY_ID[id].answer })) };
     session = null;
     remove(K_SESSION);
     renderResults();
@@ -764,6 +1120,7 @@ const QUESTIONS = [
         <button class="btn ${canResume ? "" : "btn-primary"} btn-big" id="startBtn">${canResume ? "Start new quiz" : "Start Quiz"}</button>
         <button class="btn" id="missedBtn" ${missed.length ? "" : "disabled"}>Practice missed only${missed.length ? ` (${missed.length})` : ""}</button>
         <button class="btn" id="reviewBtn">Review all Q&amp;A</button>
+        <button class="btn" id="topicsBtn">Progress by topic</button>
         <div class="card" style="padding:4px 18px">
           <label class="toggle"><span>Shuffle questions</span><input type="checkbox" id="shuffleQ" ${prefs.shuffleQ ? "checked" : ""}><span class="switch"></span></label>
           <label class="toggle"><span>Shuffle answer choices</span><input type="checkbox" id="shuffleC" ${prefs.shuffleC ? "checked" : ""}><span class="switch"></span></label>
@@ -777,9 +1134,10 @@ const QUESTIONS = [
     document.getElementById("missedBtn").onclick = () => startQuiz("missed");
     document.getElementById("reviewBtn").onclick = () => renderReview();
     document.getElementById("dueBtn").onclick = () => startDue();
+    document.getElementById("topicsBtn").onclick = () => renderTopics();
     document.getElementById("resetBtn").onclick = () => {
-      if (!confirm("Reset all progress? This clears spaced-repetition history, missed questions, and your last score.")) return;
-      remove(K_SRS); remove(K_MISSED); remove(K_LAST);
+      if (!confirm("Reset all progress? This clears spaced-repetition history, topic stats, missed questions, and your last score.")) return;
+      remove(K_SRS); remove(K_STATS); remove(K_MISSED); remove(K_LAST);
       renderHome();
     };
     if (canResume) document.getElementById("resumeBtn").onclick = () => { session = saved; session.pending = session.pending || {}; renderQuiz(); };
@@ -817,7 +1175,7 @@ const QUESTIONS = [
     app.innerHTML = `
       <div>
         <div class="progress-text"><span id="progressText">Question ${s.index + 1} of ${total}</span>
-          <span>${s.mode === "missed" ? "Missed only" : s.mode === "due" ? "Due review" : ""}</span></div>
+          <span>${s.mode === "missed" ? "Missed only" : s.mode === "due" ? "Due review" : s.mode === "topic" ? esc(s.topic || "") : ""}</span></div>
         <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${s.index + (checked?1:0)}"><div style="width:${pct}%"></div></div>
         <div class="card">
           <div class="qnum">Pretest #${q.id}${isRepeat ? '<span class="again-tag">again</span>' : ""}</div>
@@ -830,6 +1188,7 @@ const QUESTIONS = [
           <div class="feedback ${isRight ? "ok" : "bad"}" id="feedback">
             <div class="verdict">${isRight ? "Correct!" : "Not quite."}</div>
             ${isRight ? "" : `<div style="margin-bottom:6px">Correct answer: <strong>${esc(q.answer)}</strong></div>`}
+            ${!isRight && q.whyWrong && q.whyWrong[chosen] ? `<div class="why" id="whyWrong"><b>Why not "${esc(chosen)}"?</b> ${esc(q.whyWrong[chosen])}</div>` : ""}
             <div class="muted" style="color:#c9d1db">${esc(q.explanation)}</div>
             ${isRight && canConf ? `
             <div class="conf-row" id="confRow"><span class="lbl">How sure were you?</span>
@@ -909,10 +1268,11 @@ const QUESTIONS = [
     app.innerHTML = `
       <div class="stack">
         <div class="card" style="text-align:center">
-          <div class="muted">${r.mode === "missed" ? "Missed-only practice" : "Quiz"} complete</div>
+          <div class="muted">${r.mode === "missed" ? "Missed-only practice" : r.mode === "topic" ? esc(r.topic) + " practice" : "Quiz"} complete</div>
           <div id="scoreText" style="font-size:44px;font-weight:800;color:var(--accent);line-height:1.2;margin:6px 0">${r.correct} / ${r.total}</div>
           <div style="font-size:22px;font-weight:700" id="pctText">${r.percent}%</div>
         </div>
+        ${r.results ? topicBreakdownHtml(r.results) : ""}
         <div class="card" id="missedList">
           <h2>Missed questions (${r.missed.length})</h2>
           ${r.missed.length ? list : `<div class="empty">Perfect run — nothing missed. 🎉</div>`}
@@ -924,6 +1284,7 @@ const QUESTIONS = [
           <button class="btn" id="homeBtn">Home</button>
         </div>
       </div>`;
+    if (r.results) wireWeak(r.results);
     document.getElementById("retryAll").onclick = () => startQuiz("all");
     document.getElementById("retryMissed").onclick = () => startQuiz("missed");
     document.getElementById("reviewAll").onclick = () => renderReview();
@@ -941,6 +1302,7 @@ const QUESTIONS = [
           <ul>${q.choices.map(c => `<li class="${c === q.answer ? "is-answer" : ""}">${esc(c)}${c === q.answer ? " ✓" : ""}</li>`).join("")}</ul>
           <div><strong style="color:#86efac">Answer:</strong> ${esc(q.answer)}</div>
           <div class="muted" style="margin-top:6px;color:#c9d1db">${esc(q.explanation)}</div>
+          ${q.whyWrong ? `<ul class="ww">${q.choices.filter(c => c !== q.answer && q.whyWrong[c]).map(c => `<li><span class="wc">✕ ${esc(c)}:</span> ${esc(q.whyWrong[c])}</li>`).join("")}</ul>` : ""}
         </div>
       </details>`).join("");
     app.innerHTML = `
