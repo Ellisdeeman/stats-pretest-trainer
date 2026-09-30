@@ -111,6 +111,8 @@
   .link{background:none;border:0;color:var(--accent);cursor:pointer;padding:6px 0;font-weight:600}
   .btn-accent{background:rgba(45,212,191,.12);border:2px solid var(--accent);color:var(--accent)}
   .btn-accent .sub{display:block;font-size:14px;font-weight:600;opacity:.85}
+  .btn-quick{text-align:center;border-color:rgba(45,212,191,.45)}
+  .btn-quick .sub{display:block;font-size:14px;font-weight:600;color:var(--muted)}
   .mastery{font-size:14px;color:var(--muted);text-align:center}
   .mastery b{color:var(--text)}
   .conf-row{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap}
@@ -1059,6 +1061,25 @@ const QUESTIONS = [
     renderQuiz();
   }
 
+  // Quick quiz: the QUICK_N least-attempted questions (unseen = 0), then oldest lastSeen, random among exact ties
+  const QUICK_N = 5;
+  function pickQuickIds(){
+    const stats = getStats();
+    return shuffle(QUESTIONS.map(q => q.id)).map(id => {
+      const e = stats[id] || {};
+      return { id, a: typeof e.attempts === "number" ? e.attempts : 0, t: e.lastSeen ? Date.parse(e.lastSeen) || 0 : 0 };
+    }).sort((x, y) => x.a - y.a || x.t - y.t).slice(0, QUICK_N).map(x => x.id);
+  }
+  function startQuick(){
+    const prefs = getPrefs();
+    const ids = pickQuickIds();
+    const choiceOrder = {};
+    ids.forEach(id => { const c = BY_ID[id].choices; choiceOrder[id] = prefs.shuffleC ? shuffle(c) : c.slice(); });
+    session = { mode: "quick", ids, choiceOrder, index: 0, answers: {}, pending: {}, started: new Date().toISOString() };
+    saveSession();
+    renderQuiz();
+  }
+
   function finishQuiz(){
     const s = session;
     const total = s.ids.length;
@@ -1072,7 +1093,7 @@ const QUESTIONS = [
 
     // Update missed ids
     let stored;
-    if (s.mode === "missed" || s.mode === "topic") {
+    if (s.mode === "missed" || s.mode === "topic" || s.mode === "quick") {
       // Remove questions now answered correctly; keep everything else previously missed
       const nowCorrect = new Set(s.ids.filter(id => s.answers[id] === BY_ID[id].answer));
       stored = getMissed().filter(id => !nowCorrect.has(id));
@@ -1112,12 +1133,13 @@ const QUESTIONS = [
           <div class="score-chip"><span class="score-big">${last.correct} / ${last.total}</span><span class="muted">${last.percent}%</span></div>
         </div>` : ""}
         ${canResume ? `
-        <button class="btn btn-primary btn-big" id="resumeBtn">Resume ${saved.mode === "due" ? "review" : "quiz"} · Q${saved.index + 1} of ${saved.ids.length}</button>` : ""}
+        <button class="btn btn-primary btn-big" id="resumeBtn">Resume ${saved.mode === "due" ? "review" : saved.mode === "quick" ? "quick quiz" : "quiz"} · Q${saved.index + 1} of ${saved.ids.length}</button>` : ""}
         <button class="btn btn-accent btn-big" id="dueBtn" ${dueTotal ? "" : "disabled"}>${dueTotal
           ? `Due for review (${st.due})<span class="sub">${st.newAvail} new · overdue first</span>`
           : `All caught up<span class="sub">Next review: ${st.nextDue ? esc(fmtDay(st.nextDue)) : "—"}</span>`}</button>
         <div class="mastery" id="masteryLine">Mastered <b>${st.mastered}</b> · Learning <b>${st.learning}</b> · New <b>${st.fresh}</b></div>
         <button class="btn ${canResume ? "" : "btn-primary"} btn-big" id="startBtn">${canResume ? "Start new quiz" : "Start Quiz"}</button>
+        <button class="btn btn-big btn-quick" id="quickBtn">Quick quiz · ${QUICK_N} questions<span class="sub">Your least-seen questions</span></button>
         <button class="btn" id="missedBtn" ${missed.length ? "" : "disabled"}>Practice missed only${missed.length ? ` (${missed.length})` : ""}</button>
         <button class="btn" id="reviewBtn">Review all Q&amp;A</button>
         <button class="btn" id="topicsBtn">Progress by topic</button>
@@ -1131,6 +1153,7 @@ const QUESTIONS = [
     document.getElementById("shuffleQ").onchange = e => setPref("shuffleQ", e.target.checked);
     document.getElementById("shuffleC").onchange = e => setPref("shuffleC", e.target.checked);
     document.getElementById("startBtn").onclick = () => startQuiz("all");
+    document.getElementById("quickBtn").onclick = () => startQuick();
     document.getElementById("missedBtn").onclick = () => startQuiz("missed");
     document.getElementById("reviewBtn").onclick = () => renderReview();
     document.getElementById("dueBtn").onclick = () => startDue();
@@ -1175,7 +1198,7 @@ const QUESTIONS = [
     app.innerHTML = `
       <div>
         <div class="progress-text"><span id="progressText">Question ${s.index + 1} of ${total}</span>
-          <span>${s.mode === "missed" ? "Missed only" : s.mode === "due" ? "Due review" : s.mode === "topic" ? esc(s.topic || "") : ""}</span></div>
+          <span>${s.mode === "missed" ? "Missed only" : s.mode === "due" ? "Due review" : s.mode === "topic" ? esc(s.topic || "") : s.mode === "quick" ? "Quick quiz" : ""}</span></div>
         <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${s.index + (checked?1:0)}"><div style="width:${pct}%"></div></div>
         <div class="card">
           <div class="qnum">Pretest #${q.id}${isRepeat ? '<span class="again-tag">again</span>' : ""}</div>
@@ -1268,7 +1291,7 @@ const QUESTIONS = [
     app.innerHTML = `
       <div class="stack">
         <div class="card" style="text-align:center">
-          <div class="muted">${r.mode === "missed" ? "Missed-only practice" : r.mode === "topic" ? esc(r.topic) + " practice" : "Quiz"} complete</div>
+          <div class="muted">${r.mode === "missed" ? "Missed-only practice" : r.mode === "topic" ? esc(r.topic) + " practice" : r.mode === "quick" ? "Quick quiz" : "Quiz"} complete</div>
           <div id="scoreText" style="font-size:44px;font-weight:800;color:var(--accent);line-height:1.2;margin:6px 0">${r.correct} / ${r.total}</div>
           <div style="font-size:22px;font-weight:700" id="pctText">${r.percent}%</div>
         </div>
@@ -1277,8 +1300,9 @@ const QUESTIONS = [
           <h2>Missed questions (${r.missed.length})</h2>
           ${r.missed.length ? list : `<div class="empty">Perfect run — nothing missed. 🎉</div>`}
         </div>
+        ${r.mode === "quick" ? `<button class="btn btn-primary btn-big" id="anotherQuick">Another quick quiz</button>` : ""}
         <div class="btn-row">
-          <button class="btn btn-primary" id="retryAll">Retry all</button>
+          <button class="btn ${r.mode === "quick" ? "" : "btn-primary"}" id="retryAll">Retry all</button>
           <button class="btn" id="retryMissed" ${missedNow.length ? "" : "disabled"}>Retry missed only${missedNow.length ? ` (${missedNow.length})` : ""}</button>
           <button class="btn" id="reviewAll">Review all</button>
           <button class="btn" id="homeBtn">Home</button>
@@ -1286,6 +1310,7 @@ const QUESTIONS = [
       </div>`;
     if (r.results) wireWeak(r.results);
     document.getElementById("retryAll").onclick = () => startQuiz("all");
+    if (r.mode === "quick") document.getElementById("anotherQuick").onclick = () => startQuick();
     document.getElementById("retryMissed").onclick = () => startQuiz("missed");
     document.getElementById("reviewAll").onclick = () => renderReview();
     document.getElementById("homeBtn").onclick = () => renderHome();
