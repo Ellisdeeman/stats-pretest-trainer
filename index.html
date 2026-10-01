@@ -138,6 +138,49 @@
   .trow.weak{background:var(--red-bg);border:1px solid rgba(239,68,68,.4)}
   .weak-tag{font-size:12px;font-weight:700;color:#fca5a5;margin-left:6px}
   .reset-link{color:var(--muted);font-size:14px;display:block;margin:4px auto 0}
+  .qm-sum{font-size:16px;color:var(--muted)}
+  .qm-sum b{color:var(--text);font-size:24px}
+  .qm-chips{display:flex;flex-wrap:wrap;gap:8px}
+  .qm-chip{min-height:44px;min-width:44px;padding:6px 12px;border-radius:14px;border:1px solid var(--border);background:var(--card);font-size:15px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+  .qm-chip small{font-size:13px;color:var(--muted);font-weight:600}
+  .qm-chip.on{border-color:var(--accent);background:rgba(45,212,191,.12);color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+  .qm-legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px;color:var(--muted)}
+  .qm-legend span{display:inline-flex;align-items:center;gap:6px}
+  .qm-legend i{display:inline-block;width:14px;height:14px;border-radius:4px;position:relative;border:1px solid var(--border);background:var(--card2)}
+  .qm-group{padding:14px}
+  .qm-ghead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:10px}
+  .qm-ghead h3{margin:0;font-size:17px}
+  .qm-ghead span{font-size:13px;color:var(--muted);white-space:nowrap}
+  .qm-grid{display:grid;grid-template-columns:repeat(auto-fill,48px);gap:8px}
+  .qm-tile{width:48px;height:48px;border-radius:12px;border:2px solid var(--border);background:var(--card2);color:var(--muted);font-weight:800;font-size:16px;cursor:pointer;position:relative;padding:0;display:grid;place-items:center;transition:transform .05s}
+  .qm-tile:active{transform:scale(.95)}
+  .qm-tile:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .qm-new{background:var(--card2);border-color:var(--border);color:var(--muted)}
+  .qm-red{background:rgba(239,68,68,.22);border-color:var(--red);color:#fecaca}
+  .qm-learn{background:rgba(234,179,8,.18);border-color:#eab308;color:#fde68a}
+  .qm-mast{background:rgba(34,197,94,.22);border-color:var(--green);color:#bbf7d0}
+  .qm-due::after{content:"";position:absolute;top:4px;right:4px;width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 2px var(--bg)}
+  .qm-legend i.qm-red{background:rgba(239,68,68,.22);border-color:var(--red)}
+  .qm-legend i.qm-learn{background:rgba(234,179,8,.18);border-color:#eab308}
+  .qm-legend i.qm-mast{background:rgba(34,197,94,.22);border-color:var(--green)}
+  .qm-legend i.qm-due::after{top:-3px;right:-3px;width:7px;height:7px}
+  .qm-tile.qm-sel{box-shadow:0 0 0 3px var(--accent)}
+  .qm-backdrop{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center}
+  .qm-sheet{width:100%;max-width:760px;max-height:88vh;overflow-y:auto;background:var(--card);border:1px solid var(--border);border-bottom:0;border-radius:18px 18px 0 0;padding:10px 18px calc(18px + env(safe-area-inset-bottom));animation:qmUp .18s ease-out}
+  @keyframes qmUp{from{transform:translateY(30px);opacity:.6}to{transform:none;opacity:1}}
+  @media (prefers-reduced-motion:reduce){.qm-sheet{animation:none}}
+  .qm-grab{width:40px;height:5px;border-radius:999px;background:#3a424f;margin:0 auto 10px}
+  .qm-pill{display:inline-block;font-size:13px;font-weight:700;padding:3px 10px;border-radius:999px;border:1px solid var(--border);margin-right:6px}
+  .qm-pill.qm-red,.qm-pill.qm-learn,.qm-pill.qm-mast,.qm-pill.qm-new{border-width:1px}
+  .qm-statline{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 0}
+  .qm-stat{background:var(--card2);border:1px solid var(--border);border-radius:14px;padding:8px 10px;text-align:center}
+  .qm-stat b{display:block;font-size:20px}
+  .qm-stat span{font-size:13px;color:var(--muted)}
+  .qm-hist{font-size:14px;color:var(--muted);margin-bottom:10px}
+  .qm-hist .h1{color:var(--green);font-weight:800}.qm-hist .h0{color:var(--red);font-weight:800}
+  .qm-ans ul{margin:8px 0 10px;padding-left:20px}
+  .qm-ans li{margin:4px 0}
+  .qm-ans li.is-answer{color:#86efac;font-weight:700}
   @media (min-width:700px){ main{padding-top:28px} h1{font-size:34px} }
 </style>
 </head>
@@ -965,6 +1008,120 @@ const QUESTIONS = [
     document.getElementById("homeBtn").onclick = () => renderHome();
     scrollTop();
   }
+  // ---------- question map (modeled on the JLPT app's word map: status-coloured tiles, legend, filters, detail sheet) ----------
+  const K_QMAP = "statsPretest.qmap";   // {st: status filter, tp: topic filter}
+  const QM_ST = [["all","All"],["due","Due today"],["red","Struggling"],["learn","Learning"],["mast","Mastered"],["new","New"]];
+  const QM_NAME = { new: "New", red: "Struggling", learn: "Learning", mast: "Mastered" };
+  const QM_TSHORT = { "Data & variables": "Data", "Graphs & distributions": "Graphs", "Center & spread": "Center", "Probability": "Probability" };
+  // state of one question: new (never answered) · red (last answer wrong or accuracy < 50%) · learn (seen, not mastered) · mast (SR interval >= 7)
+  function qState(id, stats, srs, missedSet, t){
+    const e = stats[id], c = srs[id];
+    const attempts = e && e.attempts || 0, correct = e && e.correct || 0;
+    const hist = e && Array.isArray(e.history) ? e.history : [];
+    const due = !!(c && (!c.due || c.due <= t));
+    let st;
+    if (c && (c.interval || 0) >= 7) st = "mast";
+    else if (!attempts && !c && !missedSet.has(id)) st = "new";
+    else if ((hist.length && hist[hist.length - 1] === 0) || (attempts && correct / attempts < 0.5) || (!attempts && missedSet.has(id))) st = "red";
+    else st = "learn";
+    return { st, due, attempts, correct, hist, card: c || null };
+  }
+  function qmAll(){
+    const stats = getStats(), srs = getSrs(), missedSet = new Set(getMissed()), t = todayStr(), out = {};
+    QUESTIONS.forEach(q => { out[q.id] = qState(q.id, stats, srs, missedSet, t); });
+    return out;
+  }
+  const qmMatch = (x, f) => f === "all" ? true : f === "due" ? x.due : x.st === f;
+  function renderQMap(selId){
+    const S = qmAll();
+    const f = Object.assign({ st: "all", tp: "all" }, load(K_QMAP, {}));
+    if (!QM_ST.some(x => x[0] === f.st)) f.st = "all";
+    if (f.tp !== "all" && !TOPICS.includes(f.tp)) f.tp = "all";
+    const ids = QUESTIONS.map(q => q.id);
+    const cnt = k => ids.filter(id => qmMatch(S[id], k)).length;
+    const red = ids.filter(id => S[id].st === "red");
+    const tileHtml = id => { const x = S[id];
+      return `<button class="qm-tile qm-${x.st}${x.due ? " qm-due" : ""}${selId === id ? " qm-sel" : ""}" data-id="${id}" data-state="${x.st}" data-due="${x.due ? 1 : 0}"
+        aria-label="Question ${id}: ${QM_NAME[x.st]}${x.due ? ", due today" : ""}">${id}</button>`; };
+    let shown = 0;
+    const groups = TOPICS.filter(t => f.tp === "all" || f.tp === t).map(t => {
+      const qs = QUESTIONS.filter(q => q.topic === t), vis = qs.filter(q => qmMatch(S[q.id], f.st));
+      shown += vis.length;
+      if (!vis.length) return "";
+      const m = qs.filter(q => S[q.id].st === "mast").length;
+      return `<div class="card qm-group" data-topic="${esc(t)}"><div class="qm-ghead"><h3>${esc(t)}</h3><span>${f.st === "all" ? "" : vis.length + " shown · "}${m}/${qs.length} mastered</span></div>
+        <div class="qm-grid">${vis.map(q => tileHtml(q.id)).join("")}</div></div>`;
+    }).join("");
+    app.innerHTML = `
+      <div class="stack" id="qmap">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+          <h2 style="margin:0">Question map</h2>
+          <button class="link" id="homeBtn">← Home</button>
+        </div>
+        <div class="qm-sum" id="qmSummary"><b>${cnt("mast")}</b> / 44 mastered · <span data-c="learn">${cnt("learn")} learning</span> · <span data-c="red">${cnt("red")} struggling</span> · <span data-c="new">${cnt("new")} new</span> · <span data-c="due">${cnt("due")} due today</span></div>
+        <div class="qm-legend" aria-label="Legend"><span><i class="qm-new"></i>New</span><span><i class="qm-red"></i>Struggling</span><span><i class="qm-learn"></i>Learning</span><span><i class="qm-mast"></i>Mastered</span><span><i class="qm-due"></i>due today</span></div>
+        <div class="qm-chips" id="qmStatus" role="radiogroup" aria-label="Status filter">${QM_ST.map(([k, n]) => `<button class="qm-chip ${f.st === k ? "on" : ""}" role="radio" aria-checked="${f.st === k}" data-st="${k}">${n} <small>${cnt(k)}</small></button>`).join("")}</div>
+        <div class="qm-chips" id="qmTopic" role="radiogroup" aria-label="Topic filter">${["all", ...TOPICS].map(t => `<button class="qm-chip ${f.tp === t ? "on" : ""}" role="radio" aria-checked="${f.tp === t}" data-tp="${esc(t)}">${t === "all" ? "All topics" : esc(QM_TSHORT[t])}</button>`).join("")}</div>
+        ${red.length ? `<button class="btn" id="qmRedAll" style="border-color:rgba(239,68,68,.5)">Practice all struggling (${red.length})</button>` : ""}
+        <div id="qmGroups">${groups}</div>
+        ${shown ? "" : `<div class="empty" id="qmEmpty">No questions match this filter.</div>`}
+        <div class="muted" style="font-size:14px">Tap a tile for the question, your stats and the answer. Mastered = next review 7+ days out.</div>
+      </div>`;
+    document.getElementById("qmGroups").querySelectorAll(".qm-group+.qm-group").forEach(g => g.style.marginTop = "12px");
+    const setF = (k, v) => { const n = Object.assign({}, f); n[k] = v; save(K_QMAP, n); const y = window.scrollY; renderQMap(); window.scrollTo(0, y); };
+    document.getElementById("qmStatus").onclick = e => { const b = e.target.closest("[data-st]"); if (b) setF("st", b.dataset.st); };
+    document.getElementById("qmTopic").onclick = e => { const b = e.target.closest("[data-tp]"); if (b) setF("tp", b.dataset.tp); };
+    document.getElementById("qmGroups").onclick = e => { const b = e.target.closest(".qm-tile"); if (!b) return;
+      app.querySelectorAll(".qm-sel").forEach(x => x.classList.remove("qm-sel")); b.classList.add("qm-sel"); openQDetail(+b.dataset.id, b); };
+    const ra = document.getElementById("qmRedAll"); if (ra) ra.onclick = () => startQuiz("red", null, red);
+    document.getElementById("homeBtn").onclick = () => renderHome();
+    if (selId && BY_ID[selId]) { const el = app.querySelector(`.qm-tile[data-id="${selId}"]`); if (el && el.scrollIntoView) el.scrollIntoView({ block: "center" }); else scrollTop(); }
+    else scrollTop();
+  }
+  function closeQDetail(){ document.querySelectorAll(".qm-backdrop").forEach(m => m.remove()); document.removeEventListener("keydown", qmKey); }
+  function qmKey(e){ if (e.key === "Escape") closeQDetail(); }
+  function openQDetail(id, opener){
+    closeQDetail();
+    const q = BY_ID[id], all = qmAll(), x = all[id], c = x.card;
+    const red = QUESTIONS.map(q => q.id).filter(i => all[i].st === "red");
+    const acc = x.attempts ? Math.round(x.correct / x.attempts * 100) + "%" : "—";
+    const next = c ? (c.due ? fmtDay(c.due) : "Today") : "Not scheduled";
+    const md = document.createElement("div");
+    md.className = "qm-backdrop";
+    md.innerHTML = `<div class="qm-sheet" role="dialog" aria-modal="true" aria-labelledby="qmTitle" id="qmDetail" data-id="${id}">
+      <div class="qm-grab" aria-hidden="true"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <div class="qnum" id="qmTitle" style="margin:0">Pretest #${id}</div>
+        <button class="link" id="qmClose" style="min-height:44px;padding:0 4px">Close</button>
+      </div>
+      <div style="margin:4px 0 10px"><span class="qm-pill qm-${x.st}" id="qmState">${QM_NAME[x.st]}</span>${x.due ? `<span class="qm-pill" style="color:var(--accent);border-color:var(--accent)">due today</span>` : ""}<span class="qm-pill muted">${esc(q.topic)}</span></div>
+      <p class="prompt" id="qmPrompt" style="font-size:18px">${esc(q.prompt)}</p>
+      <div class="qm-statline">
+        <div class="qm-stat"><b id="qmAttempts">${x.attempts}</b><span>attempts</span></div>
+        <div class="qm-stat"><b id="qmAcc">${acc}</b><span>accuracy</span></div>
+        <div class="qm-stat"><b id="qmNext" style="font-size:${next.length > 9 ? 15 : 20}px">${esc(next)}</b><span>next review</span></div>
+      </div>
+      ${x.hist.length ? `<div class="qm-hist">Last ${Math.min(10, x.hist.length)}: ${x.hist.slice(-10).map(h => `<span class="h${h ? 1 : 0}">${h ? "✓" : "✕"}</span>`).join(" ")}${c ? ` · interval ${c.interval || 0} d${c.lapses ? ` · ${c.lapses} lapse${c.lapses === 1 ? "" : "s"}` : ""}` : ""}</div>` : `<div class="qm-hist">Not answered yet.</div>`}
+      <button class="btn" id="qmShow" aria-expanded="false" aria-controls="qmAnswer">Show answer</button>
+      <div class="qm-ans feedback hidden" id="qmAnswer" style="margin-top:0">
+        <ul>${q.choices.map(ch => `<li class="${ch === q.answer ? "is-answer" : ""}">${esc(ch)}${ch === q.answer ? " ✓" : ""}</li>`).join("")}</ul>
+        <div><strong style="color:#86efac">Answer:</strong> ${esc(q.answer)}</div>
+        <div class="muted" style="margin-top:6px;color:#c9d1db">${esc(q.explanation)}</div>
+      </div>
+      <div class="stack" style="margin-top:12px">
+        <button class="btn btn-primary" id="qmPractice">Practice this question</button>
+        ${red.length ? `<button class="btn" id="qmPracticeRed">Practice all struggling (${red.length})</button>` : ""}
+      </div>
+    </div>`;
+    document.body.appendChild(md);
+    md.onclick = e => { if (e.target === md) closeQDetail(); };
+    document.addEventListener("keydown", qmKey);
+    md.querySelector("#qmClose").onclick = () => { closeQDetail(); if (opener && opener.focus) opener.focus(); };
+    md.querySelector("#qmShow").onclick = e => { const a = md.querySelector("#qmAnswer"); a.classList.remove("hidden"); e.currentTarget.classList.add("hidden"); e.currentTarget.setAttribute("aria-expanded", "true"); };
+    md.querySelector("#qmPractice").onclick = () => { closeQDetail(); startQuiz("map", null, [id]); };
+    const pr = md.querySelector("#qmPracticeRed"); if (pr) pr.onclick = () => { closeQDetail(); startQuiz("red", null, red); };
+    md.querySelector("#qmClose").focus();
+  }
   function setConfidence(s, k, id, conf){
     if (!s.srPrev || !Object.prototype.hasOwnProperty.call(s.srPrev, k)) return;
     const srs = getSrs();
@@ -1046,9 +1203,10 @@ const QUESTIONS = [
       typeof s.index === "number" && s.index >= 0 && s.index < s.ids.length && s.answers && typeof s.answers === "object";
   }
 
-  function startQuiz(mode, topic){
+  function startQuiz(mode, topic, idList){
     const prefs = getPrefs();
-    let ids = mode === "missed" ? getMissed()
+    let ids = Array.isArray(idList) ? idList.filter(id => BY_ID[id])
+      : mode === "missed" ? getMissed()
       : mode === "topic" ? QUESTIONS.filter(q => q.topic === topic).map(q => q.id)
       : QUESTIONS.map(q => q.id);
     if (!ids.length) { renderHome(); return; }
@@ -1093,7 +1251,7 @@ const QUESTIONS = [
 
     // Update missed ids
     let stored;
-    if (s.mode === "missed" || s.mode === "topic" || s.mode === "quick") {
+    if (s.mode === "missed" || s.mode === "topic" || s.mode === "quick" || s.mode === "map" || s.mode === "red") {
       // Remove questions now answered correctly; keep everything else previously missed
       const nowCorrect = new Set(s.ids.filter(id => s.answers[id] === BY_ID[id].answer));
       stored = getMissed().filter(id => !nowCorrect.has(id));
@@ -1143,6 +1301,7 @@ const QUESTIONS = [
         <button class="btn" id="missedBtn" ${missed.length ? "" : "disabled"}>Practice missed only${missed.length ? ` (${missed.length})` : ""}</button>
         <button class="btn" id="reviewBtn">Review all Q&amp;A</button>
         <button class="btn" id="topicsBtn">Progress by topic</button>
+        <button class="btn" id="qmapBtn">Question map</button>
         <div class="card" style="padding:4px 18px">
           <label class="toggle"><span>Shuffle questions</span><input type="checkbox" id="shuffleQ" ${prefs.shuffleQ ? "checked" : ""}><span class="switch"></span></label>
           <label class="toggle"><span>Shuffle answer choices</span><input type="checkbox" id="shuffleC" ${prefs.shuffleC ? "checked" : ""}><span class="switch"></span></label>
@@ -1158,6 +1317,7 @@ const QUESTIONS = [
     document.getElementById("reviewBtn").onclick = () => renderReview();
     document.getElementById("dueBtn").onclick = () => startDue();
     document.getElementById("topicsBtn").onclick = () => renderTopics();
+    document.getElementById("qmapBtn").onclick = () => renderQMap();
     document.getElementById("resetBtn").onclick = () => {
       if (!confirm("Reset all progress? This clears spaced-repetition history, topic stats, missed questions, and your last score.")) return;
       remove(K_SRS); remove(K_STATS); remove(K_MISSED); remove(K_LAST);
@@ -1198,7 +1358,7 @@ const QUESTIONS = [
     app.innerHTML = `
       <div>
         <div class="progress-text"><span id="progressText">Question ${s.index + 1} of ${total}</span>
-          <span>${s.mode === "missed" ? "Missed only" : s.mode === "due" ? "Due review" : s.mode === "topic" ? esc(s.topic || "") : s.mode === "quick" ? "Quick quiz" : ""}</span></div>
+          <span>${s.mode === "missed" ? "Missed only" : s.mode === "due" ? "Due review" : s.mode === "topic" ? esc(s.topic || "") : s.mode === "quick" ? "Quick quiz" : s.mode === "map" ? "Question map" : s.mode === "red" ? "Struggling" : ""}</span></div>
         <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${s.index + (checked?1:0)}"><div style="width:${pct}%"></div></div>
         <div class="card">
           <div class="qnum">Pretest #${q.id}${isRepeat ? '<span class="again-tag">again</span>' : ""}</div>
@@ -1291,7 +1451,7 @@ const QUESTIONS = [
     app.innerHTML = `
       <div class="stack">
         <div class="card" style="text-align:center">
-          <div class="muted">${r.mode === "missed" ? "Missed-only practice" : r.mode === "topic" ? esc(r.topic) + " practice" : r.mode === "quick" ? "Quick quiz" : "Quiz"} complete</div>
+          <div class="muted">${r.mode === "missed" ? "Missed-only practice" : r.mode === "topic" ? esc(r.topic) + " practice" : r.mode === "quick" ? "Quick quiz" : r.mode === "map" ? "Single question" : r.mode === "red" ? "Struggling practice" : "Quiz"} complete</div>
           <div id="scoreText" style="font-size:44px;font-weight:800;color:var(--accent);line-height:1.2;margin:6px 0">${r.correct} / ${r.total}</div>
           <div style="font-size:22px;font-weight:700" id="pctText">${r.percent}%</div>
         </div>
@@ -1301,8 +1461,9 @@ const QUESTIONS = [
           ${r.missed.length ? list : `<div class="empty">Perfect run — nothing missed. 🎉</div>`}
         </div>
         ${r.mode === "quick" ? `<button class="btn btn-primary btn-big" id="anotherQuick">Another quick quiz</button>` : ""}
+        ${r.mode === "map" || r.mode === "red" ? `<button class="btn btn-primary btn-big" id="backToMap">Back to Question map</button>` : ""}
         <div class="btn-row">
-          <button class="btn ${r.mode === "quick" ? "" : "btn-primary"}" id="retryAll">Retry all</button>
+          <button class="btn ${r.mode === "quick" || r.mode === "map" || r.mode === "red" ? "" : "btn-primary"}" id="retryAll">Retry all</button>
           <button class="btn" id="retryMissed" ${missedNow.length ? "" : "disabled"}>Retry missed only${missedNow.length ? ` (${missedNow.length})` : ""}</button>
           <button class="btn" id="reviewAll">Review all</button>
           <button class="btn" id="homeBtn">Home</button>
@@ -1311,6 +1472,7 @@ const QUESTIONS = [
     if (r.results) wireWeak(r.results);
     document.getElementById("retryAll").onclick = () => startQuiz("all");
     if (r.mode === "quick") document.getElementById("anotherQuick").onclick = () => startQuick();
+    const btm = document.getElementById("backToMap"); if (btm) btm.onclick = () => renderQMap(r.results.length === 1 ? r.results[0].id : null);
     document.getElementById("retryMissed").onclick = () => startQuiz("missed");
     document.getElementById("reviewAll").onclick = () => renderReview();
     document.getElementById("homeBtn").onclick = () => renderHome();
@@ -1364,7 +1526,7 @@ const QUESTIONS = [
     scrollTop();
   }
 
-  document.getElementById("logoBtn").onclick = () => { if (session) saveSession(); session = null; renderHome(); };
+  document.getElementById("logoBtn").onclick = () => { closeQDetail(); if (session) saveSession(); session = null; renderHome(); };
 
   // ---------- boot: resume mid-quiz after refresh ----------
   const saved = load(K_SESSION, null);
